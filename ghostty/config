@@ -70,12 +70,20 @@ palette = 15=#ffffff
 #   - hidden: 완전히 없음 (WezTerm 과 동일하게 하려면 이것)
 macos-titlebar-style = transparent
 
+# 창 크롬(타이틀바 등)을 터미널 색에서 가져온다. 직접 지정한 아래 두 값보다
+# 우선하지 않고, 시스템 다크/라이트 대신 터미널 팔레트를 따르게 하는 옵션.
+window-theme = ghostty
+
 # 타이틀바를 Dracula 팔레트에 맞춤 (WezTerm 에는 없던 기능)
 window-titlebar-background = #21222c
 window-titlebar-foreground = #6272a4
 
-window-padding-x = 4
-window-padding-y = 4
+# 타이틀바에 현재 작업 디렉토리를 부제로 표시
+window-subtitle = working-directory
+
+# 내용이 창 안에 떠 있는 느낌. 4 는 너무 빡빡했다.
+window-padding-x = 12
+window-padding-y = 12
 window-padding-balance = true
 window-inherit-working-directory = true
 
@@ -87,7 +95,20 @@ window-colorspace = display-p3
 
 # ── 반투명 · 블러 (WezTerm 에는 블러가 아예 없다) ─────────
 background-opacity = 0.95
-background-blur = 20
+background-blur = 30
+
+# ── 가독성 ────────────────────────────────────────────────
+# 창을 반투명하게 하면 글자가 얇고 흐리게 보인다. native 는 OS 기본 합성이라
+# 배경이 비칠 때 획이 뭉개진다. linear-corrected 는 선형 색공간에서 합성한 뒤
+# 보정해 반투명 배경 위에서도 획 두께가 유지된다.
+alpha-blending = linear-corrected
+
+# 배경 대비 명암비 하한. 기본 1 은 "강제하지 않음".
+# Dracula 의 주석색(#6272a4)이 배경(#282a36) 위에서 흐린 편인데,
+# 이 값을 올리면 그런 저대비 글자만 자동으로 밝아진다. 팔레트 전체를
+# 바꾸지 않고 안 보이는 것만 끌어올리는 방식.
+# 1.0=끄기 / 1.5=은은 / 3=뚜렷 / 21=최대(팔레트가 뭉개짐)
+minimum-contrast = 1.5
 
 # ── 앱 아이콘 (Dock·Cmd+Tab 에 보이는 것) ─────────────────
 # official / blueprint / chalkboard / microchip / glass / holographic
@@ -137,6 +158,9 @@ keybind = cmd+digit_4=text:\x024
 keybind = cmd+digit_5=text:\x025
 
 # window 생성/닫기, 이전·다음
+# 왼쪽 사이드바 토글 (VS Code 관례에 맞춰 Cmd+B) → tmux prefix+B
+keybind = cmd+b=text:\x02B
+
 keybind = cmd+t=text:\x02c
 keybind = cmd+w=text:\x02x
 keybind = cmd+bracket_left=text:\x02H
