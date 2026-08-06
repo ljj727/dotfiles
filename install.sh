@@ -324,8 +324,19 @@ fi
 backup_and_link "$DOTFILES/tmux/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config/tmux"
 backup_and_link "$DOTFILES/tmux/tmux.reset.conf" "$HOME/.config/tmux/tmux.reset.conf"
+backup_and_link "$DOTFILES/tmux/theme.conf" "$HOME/.config/tmux/theme.conf"
 if [[ -d "$DOTFILES/tmux/scripts" ]]; then
+    # ln -sfn 은 대상이 "실제 디렉토리"면 덮어쓰지 않고 그 안에 링크를 만든다.
+    # (~/.config/tmux/scripts/scripts 가 생기고, 바깥의 오래된 사본이 계속 쓰인다.
+    #  실제로 이 상태였고 dotfiles 의 스크립트 수정이 반영되지 않고 있었다.)
+    # nvim 쪽과 같은 방식으로 먼저 백업해 치운다.
+    if [[ -e "$HOME/.config/tmux/scripts" && ! -L "$HOME/.config/tmux/scripts" ]]; then
+        mv "$HOME/.config/tmux/scripts" \
+           "$HOME/.config/tmux/scripts.bak.$(date +%Y%m%d%H%M%S)"
+        info "기존 ~/.config/tmux/scripts 백업"
+    fi
     ln -sfn "$DOTFILES/tmux/scripts" "$HOME/.config/tmux/scripts"
+    ok "symlink ~/.config/tmux/scripts → $DOTFILES/tmux/scripts"
 fi
 
 # nvim (LazyVim) — 디렉토리 통째로 심링크.
