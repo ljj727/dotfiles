@@ -296,5 +296,3 @@ fi
 # ============================================================================
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
-# OpenClaw Completion
-source "/Users/ijongjin/.openclaw/completions/openclaw.zsh"
