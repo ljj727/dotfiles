@@ -1,4 +1,5 @@
-# Ghostty — WezTerm 설정을 그대로 옮긴 것
+# Ghostty — 주 터미널. (원래 WezTerm 설정을 옮겨 온 것이라 아래 주석에
+# "WezTerm 에는 없던" 같은 비교가 남아 있다. WezTerm 은 2026-08-25 에 제거됐다.)
 #
 # 리로드: Cmd+Shift+,        설정 열기: ghostty +edit-config
 # 테마 목록: ghostty +list-themes
@@ -12,8 +13,9 @@
 # 세션 유지는 herdr server 가 담당하므로 창을 닫아도 작업은 살아있다.
 
 # ── SSH / 원격 (최우선) ───────────────────────────────────
-# TERM=xterm-ghostty 가 원격에 없어 tmux 가 "missing or unsuitable terminal"
-# 로 죽는 것을 막는다. ssh-terminfo 가 원격에 terminfo 를 설치해 준다.
+# TERM=xterm-ghostty 가 원격에 없어 원격 TUI 가 "missing or unsuitable
+# terminal" 로 죽는 것을 막는다. ssh-terminfo 가 원격에 terminfo 를 설치해 준다.
+# (.zshrc 의 `alias ssh='TERM=xterm-256color ssh'` 가 2차 안전망.)
 shell-integration = zsh
 shell-integration-features = sudo,ssh-terminfo,ssh-env
 
@@ -167,8 +169,10 @@ keybind = cmd+digit_5=text:\x025
 # 사이드바 토글 (herdr: toggle_sidebar = prefix+b. tmux 시절 커스텀 B 와 달리 소문자)
 keybind = cmd+b=text:\x02b
 
-# tab 생성/닫기, 이전·다음 (herdr: new_tab=c, close_pane=x, previous_tab=p, next_tab=n)
+# tab 생성/이전·다음 (herdr: new_tab=c, previous_tab=p, next_tab=n)
 keybind = cmd+t=text:\x02c
+# cmd+w 는 close_pane(prefix+x) 이다 — tab 통째로 닫는 건 close_tab(prefix+shift+x).
+# 마지막 pane 을 닫으면 결과적으로 tab 도 닫히므로 실사용 감각은 tmux 와 같다.
 keybind = cmd+w=text:\x02x
 keybind = cmd+bracket_left=text:\x02p
 keybind = cmd+bracket_right=text:\x02n
@@ -187,9 +191,10 @@ keybind = cmd+l=text:\x02l
 keybind = cmd+k=text:\x02k
 keybind = cmd+j=text:\x02j
 
-# pane 크기 조절 — herdr 는 방향별 직접 바인딩이 기본 해제라 리사이즈 모드로 진입
-# (모드 안에서 hjkl/방향키, esc 로 종료). 방향별 즉시 조절을 원하면
-# ~/.config/herdr/config.toml 의 resize_pane_* 를 채우는 쪽이 맞다.
+# pane 크기 조절 — 리사이즈 모드 진입 (모드 안에서 hjkl/방향키, esc 로 종료).
+# 방향별 즉시 조절은 herdr/config.toml 의 resize_pane_* 에 ctrl+shift+방향 으로
+# 걸어 뒀다(tmux 시절과 동일). ghostty 는 keybind = clear 라 그 조합을 가로채지
+# 않고 그대로 herdr 로 흘려보내므로 여기에 따로 바인딩할 것이 없다.
 keybind = cmd+r=text:\x02r
 
 # zoom (herdr: zoom = prefix+z — tmux 와 동일)
@@ -204,7 +209,12 @@ keybind = cmd+shift+n=text:\x02N
 
 # ── tmux 시절에서 승계하지 않은 것 ────────────────────────
 # cmd+= / cmd+- 레이아웃 균등:  herdr 에 대응 동작이 없다
-# ctrl+shift+방향 크기조절:     herdr 기본 해제 — 위 cmd+r 리사이즈 모드로 대체
 # cmd+f 검색:                   herdr 에 검색 바인딩이 없다 (스크롤백은 prefix+e 로
 #                               에디터에 열어 검색하는 방식)
 # ctrl+1/2 세션 전환:           tmux 세션 개념이 사라짐 — herdr 워크스페이스 피커(⌃/)로
+#
+# 되찾은 것: ctrl+shift+방향 크기조절 — herdr/config.toml 의 resize_pane_* 로 복원.
+
+# ── 짝이 되는 설정 파일 ───────────────────────────────────
+# herdr/config.toml 이 prefix = "ctrl+b" 를 고정한다. 위 \x02 패스스루가 전부
+# 그 값을 전제하므로, prefix 를 바꾸려면 두 파일을 함께 고쳐야 한다.

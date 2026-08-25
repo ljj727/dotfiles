@@ -20,7 +20,7 @@ return {
         width = 0.85,
         preview = { layout = "vertical", vertical = "down:45%" },
       },
-      -- tmux 팝업·셸의 fzf 와 같은 조작감 (ctrl-j/k 로 이동)
+      -- 셸의 fzf 와 같은 조작감 (ctrl-j/k 로 이동)
       keymap = {
         builtin = { ["<C-d>"] = "preview-page-down", ["<C-u>"] = "preview-page-up" },
         fzf = { ["ctrl-j"] = "down", ["ctrl-k"] = "up" },
