@@ -3,23 +3,28 @@ set -euo pipefail
 
 # ============================================================================
 # Finder → nvim
-#   Finder에서 더블클릭한 파일을 WezTerm 새 창의 nvim 으로 연다.
+#   Finder에서 더블클릭한 파일을 Ghostty 새 창의 nvim 으로 연다.
 #   OpenInTerminal.app (AppleScript 래퍼) 이 이 스크립트를 호출한다.
 #
 #   사용법:  open-in-terminal <파일>
 #            open-in-terminal --no-file    파일 없이 셸만
 #
+#   WezTerm → Ghostty 전환 (2026-08-06). Ghostty 바이너리를 직접 실행하면
+#   독립 인스턴스가 뜨는데, nvim 종료와 함께 창이 닫히는 이 용도에는 그게
+#   오히려 맞다 (평소 쓰는 Ghostty 창의 herdr 세션과 분리).
+#
 #   특정 확장자를 다른 도구로 보내고 싶으면 (예: json → jless) 아래에
 #   case 분기를 넣으면 된다. 단 jless/glow 는 읽기 전용이라 편집이 안 된다.
 # ============================================================================
 
+GHOSTTY="/Applications/Ghostty.app/Contents/MacOS/ghostty"
 BIN="/opt/homebrew/bin"
 [[ -d "$BIN" ]] || BIN="/usr/local/bin"
 
 file="${1:?열 파일 경로가 필요합니다 (또는 --no-file)}"
 
 if [[ "$file" == "--no-file" ]]; then
-    exec "$BIN/wezterm" start --always-new-process
+    exec "$GHOSTTY" -e "$SHELL" -l
 fi
 
-exec "$BIN/wezterm" start --always-new-process -- "$BIN/nvim" "$file"
+exec "$GHOSTTY" -e "$BIN/nvim" "$file"

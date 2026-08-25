@@ -5,12 +5,13 @@ set -euo pipefail
 # Finder 기본 앱 지정
 #   기본값은 Zed. 터미널(nvim)로 열고 싶으면 인자로 번들 ID 를 넘긴다:
 #     set-default-apps.sh                      → Zed
-#     set-default-apps.sh local.openinterminal → WezTerm + nvim
+#     set-default-apps.sh local.openinterminal → Ghostty + nvim
 #
 #   되돌리려면: duti -s com.apple.TextEdit <확장자> all
 # ============================================================================
 
-BUNDLE_ID="${1:-dev.zed.Zed}"
+# 기본값: OpenInTerminal (Finder 더블클릭 → 터미널+nvim). Zed 는 2026-08 에 제거됨.
+BUNDLE_ID="${1:-local.openinterminal}"
 
 command -v duti >/dev/null 2>&1 || { echo "duti 가 없습니다: brew install duti"; exit 1; }
 
