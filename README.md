@@ -49,14 +49,11 @@ cd ~/dotfiles && brew bundle dump --force --file=Brewfile
 ├── Brewfile                    # macOS 앱·CLI·npm 전역 패키지 목록 (brew bundle)
 ├── zsh/.zshrc                  # portable zshrc (zinit + plugins)
 ├── starship/starship.toml      # 프롬프트 테마
-├── tmux/.tmux.conf             # tmux 설정 (catppuccin)
-├── tmux/tmux.reset.conf        # tmux 키바인딩
-├── tmux/scripts/               # tmux 헬퍼 스크립트
-├── wezterm/                    # WezTerm 터미널 (Mac only)
-├── wezterm-windows/            # WezTerm Windows용 설정 (install.sh 대상 아님)
+├── ghostty/config              # Ghostty 터미널 (Mac only) — 폰트·색·키바인딩
+├── herdr/config.toml           # herdr 워크스페이스 매니저 (tmux 대체)
 ├── yazi/yazi.toml              # yazi 파일 매니저
 ├── nvim/                       # Neovim (LazyVim). ~/.config/nvim 으로 심링크
-├── bin/open-in-terminal        # Finder에서 연 파일 → WezTerm + nvim 으로 열기
+├── bin/open-in-terminal        # Finder에서 연 파일 → Ghostty + nvim 으로 열기
 ├── macos/                      # macOS 전용 (Finder 기본 앱 지정, .app 래퍼)
 ├── claude/                     # Claude Code 설정 (자세히는 claude/README.md)
 │   └── install.sh              #   → ~/.claude 로 복사 (로컬 전용 파일 보존)
@@ -89,22 +86,24 @@ nvim --headless "+Lazy! sync" +qa
 ## Finder 기본 앱 (macOS)
 
 `md`/`json`/`yaml`/소스코드 등 44개 확장자를 더블클릭했을 때 열릴 앱을 `duti` 로 지정한다.
-**현재 기본값은 WezTerm 새 창의 nvim.**
+**현재 기본값은 Ghostty 새 창의 nvim.**
 
 ```bash
-bash macos/set-default-apps.sh local.openinterminal # → WezTerm 새 창의 nvim
+bash macos/set-default-apps.sh local.openinterminal # → Ghostty 새 창의 nvim
 bash macos/set-default-apps.sh <번들ID>              # → 다른 앱으로 지정
 ```
 
 터미널로 여는 쪽을 고르면 `OpenInTerminal.app` 이 처리한다. Finder 가 CLI 를 직접 호출할 수 없어
-`.app` 래퍼가 필요하기 때문이다. macOS 기본 터미널 설정과 무관하게 항상 WezTerm 을 쓴다.
+`.app` 래퍼가 필요하기 때문이다. macOS 기본 터미널 설정과 무관하게 항상 Ghostty 를 쓴다.
+이때 Ghostty 바이너리를 직접 실행해 독립 인스턴스로 띄운다 — nvim 을 끄면 창도 같이 닫히고,
+평소 쓰는 herdr 세션과 섞이지 않는다.
 
 **구성 요소**
 
 | 파일 | 역할 |
 |------|------|
 | `macos/set-default-apps.sh` | `duti` 로 확장자별 기본 앱 지정 (인자로 번들 ID 전달 가능) |
-| `bin/open-in-terminal` | WezTerm + nvim 으로 파일 열기 |
+| `bin/open-in-terminal` | Ghostty + nvim 으로 파일 열기 |
 | `macos/OpenInTerminal.applescript` | Finder 가 CLI 를 못 부르므로 필요한 `.app` 래퍼 소스 |
 | `macos/build-open-in-terminal.sh` | `~/Applications/OpenInTerminal.app` 빌드 (sudo 불필요) |
 
@@ -118,12 +117,13 @@ bash macos/set-default-apps.sh <번들ID>              # → 다른 앱으로 �
 | 단계 | 내용 |
 |------|------|
 | OS 감지 | Ubuntu/Debian/macOS 자동 감지 |
-| apt 패키지 | zsh, git, curl, wget, unzip, xclip, build-essential, ripgrep, tmux, ruby (Debian) |
+| apt 패키지 | zsh, git, curl, wget, unzip, xclip, build-essential, ripgrep (Debian) |
 | Homebrew | 없으면 설치 (macOS) |
 | Brewfile | 앱·CLI·npm 전역 일괄 설치 (macOS, `--no-upgrade`) |
-| CLI 도구 | eza, fd, bat, jq, fzf, zoxide, starship, nvm, yazi, neovim, tmuxinator |
+| CLI 도구 | eza, fd, bat, jq, fzf, zoxide, starship, nvm, yazi, neovim |
+| herdr | 설치하지 않고 유무만 확인 — 없으면 안내 (herdr.dev 에서 수동 설치) |
 | Nerd Font | JetBrainsMono (Debian 전용 — mac 은 Brewfile cask) |
-| Symlink | .zshrc, starship, yazi, tmux, nvim (+ wezterm on Mac) |
+| Symlink | .zshrc, starship, yazi, herdr, nvim (+ ghostty on Mac) |
 | Finder 연동 | 기본 앱 지정 + `.app` 래퍼 빌드 (macOS) |
 | Claude 설정 | `claude/install.sh` 호출 → `~/.claude` 로 복사 |
 | 기본 셸 | zsh로 변경 |
@@ -150,7 +150,7 @@ bash ~/dotfiles/claude/install.sh
 
 | 항목 | 파일 | 내용 |
 |------|------|------|
-| 테마 | `themes/catppuccin-mocha.json` | WezTerm과 같은 Catppuccin Mocha 팔레트 |
+| 테마 | `themes/catppuccin-mocha.json` | Catppuccin Mocha 팔레트 (터미널은 Dracula — 아직 안 맞춤) |
 | 상태줄 | `statusline.sh` | 모델 · 컨텍스트 게이지 · git 브랜치 · 사용량 · 경로 (`jq` 필요) |
 | 키맵 | `keybindings.json` | transcript 뷰(`Ctrl+O`) 반페이지 스크롤 `u`/`d` |
 | 알림음 | `settings.json` 의 hook | 응답 완료 시 Glass 사운드 (macOS 전용, 그 외엔 무해하게 무시) |
@@ -220,16 +220,35 @@ export EDITOR=/opt/nvim-linux64/bin/nvim
 | `cx <dir>` | cd + ls |
 | `extract <file>` | 압축 해제 (tar/zip/7z 등) |
 
-### WezTerm + tmux (Mac)
+### Ghostty + herdr (Mac)
+
+레이아웃·세션은 전부 **herdr** 이 담당한다 (2026-08-24, tmux 에서 이행).
+Ghostty 는 터미널 본체(폰트·색·IME)만 맡고, `Cmd+*` 키를 herdr prefix
+시퀀스(`Ctrl+B` = `\x02`)로 바꿔 흘려보내는 얇은 계층 역할만 한다.
+
+그래서 **두 파일은 항상 짝**이다 — `ghostty/config` 의 패스스루가
+`herdr/config.toml` 의 `prefix = "ctrl+b"` 를 전제한다. prefix 를 바꾸면 둘 다 고쳐야 한다.
 
 | 키 | 기능 |
 |----|------|
-| `Cmd+\` | SSH 호스트 선택 |
-| `Cmd+,` | tmux 세션 선택 |
-| `Cmd+Shift+N` | 새 세션 |
-| `Cmd+t` / `Cmd+w` | 윈도우 열기/닫기 |
-| `Cmd+1~5` | 윈도우 이동 |
-| `Cmd+Shift+D/E` | 수직/수평 분할 |
-| `Ctrl+hjkl` | pane 이동 |
+| `Cmd+Shift+H` | herdr 실행 (자동 시작 아님 — 맨 셸로 뜬 뒤 필요할 때 띄운다) |
+| `Cmd+` `` ` `` | Quick Terminal (앱이 비활성일 때도 동작하는 드롭다운) |
+| `Cmd+b` | 사이드바 토글 |
+| `Cmd+t` / `Cmd+w` | tab 생성 / pane 닫기 |
+| `Cmd+[` / `Cmd+]` | 이전 / 다음 tab |
+| `Cmd+1~5` | tab 직행 |
+| `Cmd+Shift+D` / `Cmd+Shift+E` | 아래로 / 옆으로 분할 |
+| `Cmd+hjkl`, `Cmd+방향키` | pane 이동 |
+| `Ctrl+Shift+방향키` | pane 크기 조절 |
+| `Cmd+r` | 리사이즈 모드 (안에서 hjkl, `Esc` 로 종료) |
 | `Cmd+z` | pane 줌 |
-| `Cmd+f` | yazi |
+| `Cmd+p`, `Ctrl+\` | goto 팝업 |
+| `Ctrl+/` | 워크스페이스 선택 |
+| `Cmd+Shift+N` | 새 워크스페이스 |
+| `Ctrl+,` | herdr 설정 |
+
+herdr 자체는 `install.sh` 가 설치하지 않는다. [herdr.dev](https://herdr.dev) 에서 받아
+`~/.local/bin` 에 두면 되고, 이후 갱신은 `herdr update` 가 한다. 설정 심링크만 install.sh 가 건다.
+
+**tmux 에서 넘어오며 사라진 것** — `Cmd+\` SSH 호스트 선택과 `Cmd+,` 세션 선택은
+`tmux/scripts/` 의 fzf 헬퍼였고 tmux 와 함께 제거됐다. 필요하면 git 이력에 남아 있다.
