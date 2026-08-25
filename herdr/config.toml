@@ -1,0 +1,55 @@
+# herdr — 터미널 워크스페이스 매니저 (tmux 대체, 2026-08-24 이행)
+#
+# 전체 기본값 보기:  herdr --default-config
+# 이 파일 검증:      herdr config check
+# 실행 중 서버 리로드: herdr server reload-config   (또는 prefix+shift+R)
+#
+# 설계: 이 파일은 "기본값과 다르게 가야 하는 것"만 적는다. 나머지는 herdr 기본값을
+#       따르며, 기본값은 버전마다 바뀔 수 있으므로 여기 베껴 두지 않는다.
+#       단 ghostty/config 가 전제하고 있는 값(prefix)은 기본값과 같더라도
+#       명시적으로 고정한다 — 기본값이 바뀌면 ghostty 패스스루가 통째로 깨진다.
+
+[theme]
+# ghostty/config 의 Dracula 팔레트와 맞춘다. herdr 내장 테마에 dracula 가 있다.
+# (tmux 시절에는 catppuccin 이었다 — 터미널 색과 어긋나 있었다.)
+name = "dracula"
+
+[keys]
+# ─────────────────────────────────────────────────────────────────────
+# prefix — ghostty/config 가 \x02 (Ctrl+B) 를 하드코딩해서 보낸다.
+# 기본값과 같은 값이지만, 여기서 바꾸면 ghostty 의 cmd+* 바인딩이 전부
+# 죽으므로 두 파일을 함께 고쳐야 한다는 표시로 명시해 둔다.
+# ─────────────────────────────────────────────────────────────────────
+prefix = "ctrl+b"
+
+# ─────────────────────────────────────────────────────────────────────
+# pane 크기 조절 — 방향별 즉시 조절.
+# 기본값은 전부 빈 문자열(해제)이라 prefix+r 리사이즈 모드밖에 없었다.
+# tmux 시절 ctrl+shift+방향 을 그대로 복원한다. ghostty 는 keybind = clear
+# 라서 이 조합을 가로채지 않고 그대로 흘려보낸다.
+# (prefix+r 리사이즈 모드는 그대로 살아있다 — ghostty 의 cmd+r 이 그쪽.)
+# ─────────────────────────────────────────────────────────────────────
+resize_pane_left  = "ctrl+shift+left"
+resize_pane_down  = "ctrl+shift+down"
+resize_pane_up    = "ctrl+shift+up"
+resize_pane_right = "ctrl+shift+right"
+
+[experimental]
+# 이미지 프리뷰(yazi, snacks.nvim)를 herdr pane 안에서 보려면 이게 필요하다.
+# tmux 시절 allow-passthrough 에 해당하는 옵션. 아직 experimental 이라
+# 기본값(꺼짐)을 유지한다 — 켜려면 주석을 풀고 herdr server reload-config.
+# kitty_graphics = true
+
+# prefix 모드 동안 입력기를 ASCII 로 임시 전환한다. 한글 입력 중에
+# Ctrl+B 를 눌러도 prefix 명령이 먹도록 (macOS/Windows 전용, best-effort).
+# 기본값 false — 한글을 쓰는 환경이라 켠다.
+switch_ascii_input_source_in_prefix = true
+
+[advanced]
+# ghostty/config 의 scrollback-limit 과 같은 값으로 맞춘다 (바이트).
+# herdr 기본값도 동일하지만, 두 값이 따로 놀면 스크롤백 길이가 어긋나므로
+# 함께 고쳐야 한다는 표시로 남긴다.
+scrollback_limit_bytes = 10000000
+
+[ui]
+agent_panel_sort = "spaces"
