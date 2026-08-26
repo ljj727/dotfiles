@@ -7,8 +7,9 @@ set -euo pipefail
 #   사용법:  bash ~/dotfiles/server/install.sh
 #            bash ~/dotfiles/server/install.sh --dry-run   미리보기
 #
-#   대상: root 권한이 없는 공용 계정 Ubuntu 서버. 전부 $HOME 안에만 쓴다.
-#         apt·/usr/local·/etc 는 건드리지 않는다.
+#   대상: root 권한이 없는 Ubuntu 서버 (공용 서버의 개인 계정 포함).
+#         전부 $HOME 안에만 쓴다 — apt·/usr/local·/etc 는 건드리지 않는다.
+#         x86_64 · aarch64 둘 다 지원한다.
 #
 #   설치 범위 (데스크톱용 install.sh 와 다름):
 #     - zsh + 자동완성 환경 (zinit 플러그인은 첫 zsh 실행 때 자동 설치)
@@ -69,7 +70,20 @@ echo ""
 # 0. 전제 조건
 # ============================================================================
 [[ "$(uname -s)" == "Linux" ]]  || die "Linux 전용입니다 (현재: $(uname -s))"
-[[ "$(uname -m)" == "x86_64" ]] || die "x86_64 전용입니다 (현재: $(uname -m)). 다른 아키텍처는 아래 URL 을 바꿔야 합니다."
+# 아키텍처별 자산 이름. 도구마다 표기가 달라서 셋으로 나눠 둔다.
+#   ARCH_GNU  : rust 계열(eza·fd·bat) 의 <arch>-unknown-linux-gnu
+#   ARCH_JQ   : jq 는 amd64/arm64 표기
+#   ARCH_NVIM : neovim 은 x86_64/arm64 표기 (linux 만 하이픈 표기가 다르다)
+# fzf·zoxide·starship·zsh-bin 은 자체 설치 스크립트가 uname -m 을 보고
+# 알아서 고르므로 여기서 다루지 않는다.
+case "$(uname -m)" in
+    x86_64)
+        ARCH_GNU="x86_64";  ARCH_JQ="amd64"; ARCH_NVIM="x86_64" ;;
+    aarch64|arm64)
+        ARCH_GNU="aarch64"; ARCH_JQ="arm64"; ARCH_NVIM="arm64" ;;
+    *)
+        die "지원하지 않는 아키텍처: $(uname -m) (x86_64 · aarch64 만 지원)" ;;
+esac
 command -v curl >/dev/null || die "curl 이 필요합니다"
 command -v git  >/dev/null || die "git 이 필요합니다"
 command -v tar  >/dev/null || die "tar 가 필요합니다"
@@ -91,7 +105,7 @@ if command -v jq &>/dev/null; then
 else
     run curl -fsSL --retry 3 --connect-timeout 10 --max-time 180 \
         -o "$BIN/jq" \
-        "https://github.com/jqlang/jq/releases/latest/download/jq-linux-amd64"
+        "https://github.com/jqlang/jq/releases/latest/download/jq-linux-${ARCH_JQ}"
     run chmod 755 "$BIN/jq"
     record "$BIN/jq"
     ok "jq"
@@ -103,7 +117,7 @@ if command -v eza &>/dev/null; then
 else
     run curl -fsSL --retry 3 --connect-timeout 10 --max-time 180 \
         -o "$SRC/eza.tar.gz" \
-        "https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz"
+        "https://github.com/eza-community/eza/releases/latest/download/eza_${ARCH_GNU}-unknown-linux-gnu.tar.gz"
     run tar -xzf "$SRC/eza.tar.gz" -C "$SRC"
     run mv -f "$SRC/eza" "$BIN/eza"
     run chmod 755 "$BIN/eza"
@@ -123,7 +137,7 @@ install_sharkdp() {   # $1=repo  $2=binary
     if command -v "$bin" &>/dev/null; then skip "$bin"; return 0; fi
     tag="$(gh_latest_tag "$repo")"
     [[ -n "$tag" ]] || die "$repo 최신 태그 조회 실패"
-    dir="${bin}-${tag}-x86_64-unknown-linux-gnu"
+    dir="${bin}-${tag}-${ARCH_GNU}-unknown-linux-gnu"
     run curl -fsSL --retry 3 --connect-timeout 10 --max-time 180 \
         -o "$SRC/$bin.tar.gz" \
         "https://github.com/$repo/releases/download/$tag/$dir.tar.gz"
@@ -224,11 +238,7 @@ nvim_ok() {
 if nvim_ok; then
     skip "neovim ($(nvim --version | head -1 | awk '{print $2}'))"
 else
-    # 이 스크립트는 위 0번 섹션에서 x86_64 만 통과시킨다(eza·fd·bat 의 릴리스
-    # URL 에 x86_64 가 박혀 있어서다). 그래서 여기서 아키텍처를 다시 분기해도
-    # arm 쪽은 도달하지 않는다 — 혼동을 피하려고 분기를 두지 않는다.
-    # arm64 서버를 지원하려면 0번 섹션의 가드와 위 도구들의 URL 을 함께 고쳐야 한다.
-    NVIM_ASSET="nvim-linux-x86_64"
+    NVIM_ASSET="nvim-linux-${ARCH_NVIM}"
     run curl -fsSL --retry 3 --connect-timeout 10 --max-time 300 \
         -o "$SRC/nvim.tar.gz" \
         "https://github.com/neovim/neovim/releases/latest/download/${NVIM_ASSET}.tar.gz"
