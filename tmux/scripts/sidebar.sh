@@ -18,21 +18,12 @@ C_PINK=$(hex2rgb "$(c @c_pink)")
 C_MUTED=$(hex2rgb "$(c @c_muted)")
 C_SURF=$(hex2rgb "$(c @c_surface)")
 C_PURPLE=$(hex2rgb "$(c @c_purple)")
-C_CYAN=$(hex2rgb "$(c @c_cyan)")
 C_GREEN=$(hex2rgb "$(c @c_green)")
 C_YELLOW=$(hex2rgb "$(c @c_yellow)")
 
 FG()  { printf '\033[38;2;%sm' "$1"; }
 RESET=$'\033[0m'
 BOLD=$'\033[1m'
-
-# pane 폭에 맞춰 경로를 줄인다. 뒤쪽(마지막 디렉토리)이 중요하므로 앞을 자른다.
-shorten() {
-    local p="$1" max="$2"
-    p="${p/#$HOME/~}"
-    [ "${#p}" -le "$max" ] && { printf '%s' "$p"; return; }
-    printf '…%s' "${p: -$((max - 1))}"
-}
 
 prev=""
 while true; do
@@ -42,7 +33,7 @@ while true; do
     width=${width:-22}
     # #{E:@win_icon} 은 theme.conf 가 정의한 명령별 아이콘 규칙을 그대로 쓴다.
     # tmux 포맷 문자열은 \t 를 탭으로 해석하지 않는다. 실제 탭 문자를 넣어야 한다.
-    list=$(tmux list-windows -F '#{window_active}	#{window_index}	#{E:@win_icon}	#{window_name}	#{window_zoomed_flag}	#{pane_current_path}' 2>/dev/null)
+    list=$(tmux list-windows -F '#{window_active}	#{window_index}	#{E:@win_icon}	#{window_name}	#{window_zoomed_flag}' 2>/dev/null)
     [ -z "$list" ] && { sleep 1; continue; }
 
     # git 정보는 활성 창 기준. git-info.sh 는 저장소가 아니면 조용히 빈 값.
@@ -55,7 +46,7 @@ while true; do
         out=""
         out+="$(FG "$C_PURPLE")${BOLD} $(tmux display -p '#{session_name}')${RESET}\n"
         out+="$(FG "$C_SURF")$(printf '%*s' "$((width - 1))" '' | sed 's/ /─/g')${RESET}\n"
-        while IFS=$'	' read -r active idx icon name zoomed cwd; do
+        while IFS=$'	' read -r active idx icon name zoomed; do
             [ -z "$idx" ] && continue
             [ "$zoomed" = "1" ] && zi=" ⚡" || zi=""
             if [ "$active" = "1" ]; then
@@ -63,8 +54,11 @@ while true; do
             else
                 out+="$(FG "$C_MUTED") ${icon} ${idx} ${name}${zi}${RESET}\n"
             fi
-            # 폴더 위치 — 창 이름만으론 어디서 도는지 알 수 없어서 같이 보여준다.
-            out+="$(FG "$C_CYAN") 󰉋 $(shorten "$cwd" "$((width - 4))")${RESET}\n"
+            # 폴더 줄은 제거(2026-08-26, 사용자 요청 — 세션·창 목록만 본다).
+            # 경로는 pane 하단바(pane-border-format)가 pane 별로 보여주므로
+            # 여기서 반복할 필요가 없다. 부수 효과로 오클릭도 사라졌다 —
+            # sidebar-click.sh 가 줄에서 "첫 숫자"를 창 번호로 읽는데,
+            # ~/ptrg/02.injest 같은 경로를 클릭하면 02 번 창으로 튀었다.
         done <<< "$list"
         # ── 아래쪽: git · 시계 ──────────────────────────────────────────
         # 위 상태줄을 껐으므로(sidebar-toggle.sh) 여기로 옮겨왔다.
