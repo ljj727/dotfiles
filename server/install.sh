@@ -190,11 +190,30 @@ echo ""
 info ".zshrc 의존 도구 설치..."
 
 # --- fzf — fzf-tab 플러그인이 사용. ~/.fzf 에 설치 ---
-if [[ -d "$HOME/.fzf" ]] || command -v fzf &>/dev/null; then
+#
+# [디렉토리가 아니라 바이너리로 판단한다 — 2026-08-26 실제로 당했다]
+# 예전 조건은  [[ -d "$HOME/.fzf" ]] || command -v fzf  였다. clone 은 됐는데
+# install 이 실패하면 ~/.fzf 만 남는데, 그 뒤로는 디렉토리가 있다는 이유로
+# 영원히 skip 되어 fzf 없는 상태가 고착된다. 실제로 그렇게 돼서
+# cd<Tab> 을 누를 때마다 fzf-tab 이 fzf 를 못 찾고, Ubuntu 의
+# command-not-found 가 "Please ask your administrator." 를 뱉었다.
+# 껍데기 디렉토리가 남아 있으면 지우고 다시 받는다.
+if command -v fzf &>/dev/null || [[ -x "$HOME/.fzf/bin/fzf" ]]; then
     skip "fzf"
 else
+    [[ -e "$HOME/.fzf" ]] && { run rm -rf "$HOME/.fzf"; info "불완전한 ~/.fzf 제거"; }
     run git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
     run "$HOME/.fzf/install" --key-bindings --completion --no-update-rc --no-bash --no-fish
+    # install 이 조용히 실패해도 여기서 잡는다 (dry-run 때는 검사하지 않는다)
+    if [[ $DRY_RUN -eq 0 && ! -x "$HOME/.fzf/bin/fzf" ]]; then
+        die "fzf 설치 실패 — ~/.fzf/bin/fzf 가 없습니다"
+    fi
+    # PATH 확보를 이중으로 한다. 원래 경로는 ~/.fzf.zsh 가 PATH 에 ~/.fzf/bin 을
+    # 넣고 .zshrc:143 이 그걸 source 하는 것인데, 그 파일이 없거나 source 가
+    # 실패하면 fzf 가 조용히 사라진다. $BIN 은 .zshrc:4 가 항상 PATH 에 넣으므로
+    # 여기에 심링크를 걸어 두면 그 연결고리와 무관하게 잡힌다.
+    run ln -sf "$HOME/.fzf/bin/fzf" "$BIN/fzf"
+    record "$BIN/fzf"
     record "$HOME/.fzf"
     record "$HOME/.fzf.zsh"
     ok "fzf"
