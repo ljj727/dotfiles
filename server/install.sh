@@ -224,11 +224,11 @@ nvim_ok() {
 if nvim_ok; then
     skip "neovim ($(nvim --version | head -1 | awk '{print $2}'))"
 else
-    case "$(uname -m)" in
-        x86_64)        NVIM_ASSET="nvim-linux-x86_64" ;;
-        aarch64|arm64) NVIM_ASSET="nvim-linux-arm64" ;;
-        *) die "neovim: 지원하지 않는 아키텍처 $(uname -m)" ;;
-    esac
+    # 이 스크립트는 위 0번 섹션에서 x86_64 만 통과시킨다(eza·fd·bat 의 릴리스
+    # URL 에 x86_64 가 박혀 있어서다). 그래서 여기서 아키텍처를 다시 분기해도
+    # arm 쪽은 도달하지 않는다 — 혼동을 피하려고 분기를 두지 않는다.
+    # arm64 서버를 지원하려면 0번 섹션의 가드와 위 도구들의 URL 을 함께 고쳐야 한다.
+    NVIM_ASSET="nvim-linux-x86_64"
     run curl -fsSL --retry 3 --connect-timeout 10 --max-time 300 \
         -o "$SRC/nvim.tar.gz" \
         "https://github.com/neovim/neovim/releases/latest/download/${NVIM_ASSET}.tar.gz"
