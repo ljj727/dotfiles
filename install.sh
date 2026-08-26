@@ -75,7 +75,7 @@ backup_and_link() {
 if [[ "$OS" == "debian" ]]; then
     info "apt 패키지 설치..."
     sudo apt-get update -qq
-    # build-essential: nvim treesitter 컴파일 / ripgrep: LazyVim 검색 / ruby: tmuxinator
+    # build-essential: nvim treesitter 컴파일 / ripgrep: fzf-lua 검색 / ruby: tmuxinator
     sudo apt-get install -y -qq \
         zsh git curl wget unzip xclip fontconfig \
         build-essential ripgrep tmux ruby-full > /dev/null 2>&1
@@ -232,7 +232,7 @@ else
 fi
 
 # --- neovim ---
-# Debian apt 의 neovim 은 LazyVim 요구치(0.9+)보다 낮은 경우가 많아 공식 릴리스를 쓴다.
+# Debian apt 의 neovim 은 플러그인 요구치(0.9+)보다 낮은 경우가 많아 공식 릴리스를 쓴다.
 nvim_version_ok() {
     command -v nvim &> /dev/null || return 1
     local major minor
@@ -314,13 +314,13 @@ backup_and_link "$DOTFILES/starship/starship.toml" "$HOME/.config/starship/stars
 mkdir -p "$HOME/.config/yazi"
 backup_and_link "$DOTFILES/yazi/yazi.toml" "$HOME/.config/yazi/yazi.toml"
 
-# ghostty (Mac only) — WezTerm 과 병행. 설정 파일 하나뿐
+# ghostty (Mac only) — 터미널 본체. 설정 파일 하나뿐
 if [[ "$OS" == "mac" && -f "$DOTFILES/ghostty/config" ]]; then
     mkdir -p "$HOME/.config/ghostty"
     backup_and_link "$DOTFILES/ghostty/config" "$HOME/.config/ghostty/config"
 fi
 
-# tmux (Mac에서만 WezTerm과 함께 사용)
+# tmux — 레이아웃·세션 담당. ghostty/config 의 키 패스스루가 여기 바인딩을 전제한다
 backup_and_link "$DOTFILES/tmux/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config/tmux"
 backup_and_link "$DOTFILES/tmux/tmux.reset.conf" "$HOME/.config/tmux/tmux.reset.conf"
@@ -339,8 +339,8 @@ if [[ -d "$DOTFILES/tmux/scripts" ]]; then
     ok "symlink ~/.config/tmux/scripts → $DOTFILES/tmux/scripts"
 fi
 
-# nvim (LazyVim) — 디렉토리 통째로 심링크.
-# lazy-lock.json / lazyvim.json 은 nvim 이 직접 갱신하므로 링크여야 repo 에 반영된다.
+# nvim (직접 구성 + lazy.nvim) — 디렉토리 통째로 심링크.
+# lazy-lock.json 은 nvim 이 직접 갱신하므로 링크여야 repo 에 반영된다.
 if [[ -e "$HOME/.config/nvim" && ! -L "$HOME/.config/nvim" ]]; then
     mv "$HOME/.config/nvim" "$HOME/.config/nvim.bak.$(date +%Y%m%d%H%M%S)"
     info "기존 ~/.config/nvim 백업"
@@ -348,14 +348,6 @@ fi
 mkdir -p "$HOME/.config"
 ln -sfn "$DOTFILES/nvim" "$HOME/.config/nvim"
 ok "symlink ~/.config/nvim → $DOTFILES/nvim"
-
-# wezterm (Mac only)
-if [[ "$OS" == "mac" ]]; then
-    mkdir -p "$HOME/.config/wezterm"
-    for f in "$DOTFILES"/wezterm/*.lua; do
-        backup_and_link "$f" "$HOME/.config/wezterm/$(basename "$f")"
-    done
-fi
 
 # ============================================================================
 # 5. ~/.zshrc.local (없을 때만 예시 복사)
@@ -369,7 +361,7 @@ fi
 
 # ============================================================================
 # 5.3 Finder 기본 앱 → 터미널 (macOS)
-#     md/json/yaml/소스코드를 더블클릭하면 WezTerm 새 창의 nvim/jless/glow 로 열린다.
+#     md/json/yaml/소스코드를 더블클릭하면 Ghostty 새 창의 nvim 으로 열린다.
 # ============================================================================
 if [[ "$OS" == "mac" && -f "$DOTFILES/macos/build-open-in-terminal.sh" ]]; then
     echo ""

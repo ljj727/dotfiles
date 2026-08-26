@@ -1,7 +1,7 @@
 -- snacks.nvim — 파일 트리(explorer) · 이미지 · 잡다한 UI 보조
 --
 -- 이미지 동작 조건
---   · 터미널이 kitty graphics protocol 지원 → Ghostty 필요 (WezTerm 은 제한적)
+--   · 터미널이 kitty graphics protocol 지원 → Ghostty 필요
 --   · ImageMagick(magick) 필요 — brew install imagemagick
 --   · tmux 안에서는 allow-passthrough 필요 (.tmux.conf 에 설정됨).
 --     단 큰 이미지·PDF 는 tmux 안에서 불안정하므로 tmux 밖 창 권장
