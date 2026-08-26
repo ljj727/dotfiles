@@ -43,6 +43,11 @@ return {
   {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
+    -- :LspStatus 는 파일을 열기 전에도 쓸 수 있어야 한다. 이게 없으면
+    -- 빈 nvim 에서 "Not an editor command" 가 난다 (지연 로드라 아직 config
+    -- 가 안 돌아 명령이 등록되지 않은 상태). cmd 를 적어 두면 lazy.nvim 이
+    -- 그 명령을 가로채 플러그인을 먼저 로드한다.
+    cmd = { "LspStatus" },
     dependencies = { "mason-org/mason.nvim", "saghen/blink.cmp" },
     config = function()
       -- ── 진단 표시 ────────────────────────────────────────────────────
