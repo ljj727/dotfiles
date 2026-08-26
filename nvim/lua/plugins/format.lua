@@ -15,8 +15,11 @@ return {
     event = { "BufWritePre" },
     cmd = { "ConformInfo" },
     keys = {
+      -- <leader>c* = 코드(LSP) 네임스페이스. 처음엔 <leader>f 였는데 그러면
+      -- <leader>ff/fg(fzf 찾기)의 접두사가 되어 포매팅이 timeoutlen 만큼
+      -- 기다렸다 실행된다. fzf 네임스페이스를 침범하지 않도록 옮겼다.
       {
-        "<leader>f",
+        "<leader>cf",
         function() require("conform").format({ async = true, lsp_format = "fallback" }) end,
         mode = { "n", "v" },
         desc = "포매팅",

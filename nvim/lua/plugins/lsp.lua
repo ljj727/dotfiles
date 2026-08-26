@@ -10,6 +10,13 @@
 --   nvim-lspconfig 는 lsp/<이름>.lua 로 서버별 기본값(실행 인자·파일타입·
 --   루트 탐지)만 제공하고, 켜고 끄는 판단은 아래 루프가 한다.
 --
+-- [프로젝트 루트가 없으면 반쪽만 동작한다]
+--   서버는 .git · pyproject.toml · go.mod · Cargo.toml · pom.xml 같은 표지를
+--   찾아 루트를 정한다. 아무것도 없으면 root_dir 이 nil 이 되어 "단일 파일
+--   모드"로 뜨는데, 이때 정의점프·진단은 되지만 워크스페이스 심볼 검색
+--   (<leader>cS)과 교차 파일 참조는 빈 결과가 나온다. 고장이 아니다 —
+--   루트가 없으니 뒤질 범위가 없는 것이다. git init 만 해도 해결된다.
+--
 -- [0.11 기본 키맵을 건드리지 않는다] 이미 내장된 것:
 --   grr 참조 · gri 구현 · grn rename · gra code action · grt 타입정의
 --   gO 문서심볼 · [d ]d 진단이동 · K 호버(LSP 붙으면 자동)
@@ -164,7 +171,10 @@ return {
           -- 0.11 기본에 없는 것만 추가한다. 나머지는 위 주석의 내장 키맵 참고.
           map("gd", vim.lsp.buf.definition, "정의로 이동")
           map("gD", vim.lsp.buf.declaration, "선언으로 이동")
-          map("<leader>e", vim.diagnostic.open_float, "진단 상세 보기")
+          -- 진단 상세는 <leader>d. <leader>e 는 snacks 의 파일 트리라 쓰면 안 된다
+          -- (버퍼 로컬 매핑이 전역을 덮어써서, LSP 가 붙은 파일에서만 파일 트리가
+          --  안 열리는 이상한 증상이 된다. 실제로 그렇게 만들었다가 고쳤다.)
+          map("<leader>d", vim.diagnostic.open_float, "진단 상세 보기")
         end,
       })
     end,
