@@ -219,10 +219,7 @@ alias ltree="eza --tree --level=2 --icons --git"
 # ============================================================================
 # Aliases: FZF helpers
 # ============================================================================
-# fzf-tmux -p (tmux 팝업) → 그냥 fzf. tmux 제거(2026-08-25) 로 팝업이 사라졌다.
-# herdr 에서 팝업을 원하면 ~/.config/herdr/config.toml 의 [[keys.command]] 에
-# type = "popup" 으로 거는 쪽이 맞다 — 별칭은 셸 안에서 동작해야 하므로 여기선 fzf.
-alias vf='fd --type f --hidden --exclude .git | fzf --reverse | xargs nvim'
+alias vf='fd --type f --hidden --exclude .git | fzf-tmux -p --reverse | xargs nvim'
 
 # ============================================================================
 # Aliases: Network/Security
@@ -234,8 +231,7 @@ alias massdns='~/hacking/tools/massdns/bin/massdns -r ~/hacking/tools/massdns/li
 alias server='python -m http.server 4445'
 alias tunnel='ngrok http 4445'
 alias fuzz='ffuf -w ~/hacking/SecLists/content_discovery_all.txt -mc all -u'
-# tmux neww → 현재 셸에서 실행. herdr 밖(맨 셸)에서도 동작해야 하므로 그냥 실행한다.
-alias mat='osascript -e "tell application \"System Events\" to key code 126 using {command down}" && cmatrix'
+alias mat='osascript -e "tell application \"System Events\" to key code 126 using {command down}" && tmux neww "cmatrix"'
 
 # ============================================================================
 # Functions

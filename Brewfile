@@ -7,6 +7,7 @@ tap "gromgit/fuse"
 tap "homebrew/cask-fonts"
 tap "jesseduffield/lazygit"
 tap "nats-io/nats-tools"
+tap "nikitabobko/tap"
 # Tool for generating GNU Standards-compliant Makefiles
 brew "automake"
 # Clone of cat(1) with syntax highlighting and Git integration
@@ -133,8 +134,10 @@ brew "telnet"
 brew "termscp"
 # Enables extra languages support for Tesseract
 brew "tesseract-lang"
-# tmux/tmuxinator 제거(2026-08-25) — herdr 로 이행. herdr 는 brew 에 없어
-# herdr.dev 에서 직접 받아 ~/.local/bin 에 두고 `herdr update` 로 갱신한다.
+# Terminal multiplexer
+brew "tmux"
+# Manage complex tmux sessions easily
+brew "tmuxinator"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
 # Extremely fast Python package installer and resolver, written in Rust
@@ -155,6 +158,7 @@ brew "zoxide"
 brew "zsh-autosuggestions"
 # Command-line interface for 1Password
 cask "1password-cli"
+cask "aerospace"
 # Menu bar tool to limit maximum charging percentage
 cask "aldente"
 # Distribution of the Python and R programming languages for scientific computing
@@ -172,8 +176,6 @@ cask "font-jetbrains-mono"
 cask "font-sf-mono"
 cask "font-sf-pro"
 cask "font-victor-mono-nerd-font"
-# Terminal emulator that uses platform-native UI and GPU acceleration
-cask "ghostty"
 # GraalVM from Oracle
 cask "graalvm-jdk@21"
 # Menu bar manager
@@ -194,6 +196,8 @@ cask "stats"
 cask "synology-drive"
 # Multimedia player
 cask "vlc"
+# GPU-accelerated cross-platform terminal emulator and multiplexer
+cask "wezterm"
 # Open-source version of the X.Org X Window System
 cask "xquartz"
 npm "@anthropic-ai/claude-code"

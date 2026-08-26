@@ -75,12 +75,10 @@ backup_and_link() {
 if [[ "$OS" == "debian" ]]; then
     info "apt 패키지 설치..."
     sudo apt-get update -qq
-    # build-essential: nvim treesitter 컴파일 / ripgrep: LazyVim 검색
-    # tmux·ruby 제거(2026-08-25): herdr 로 이행하면서 tmuxinator 도 함께 빠졌다.
-    # 원격 Debian 에서 멀티플렉서가 필요하면 herdr 를 직접 설치한다 (herdr.dev).
+    # build-essential: nvim treesitter 컴파일 / ripgrep: LazyVim 검색 / ruby: tmuxinator
     sudo apt-get install -y -qq \
         zsh git curl wget unzip xclip fontconfig \
-        build-essential ripgrep > /dev/null 2>&1
+        build-essential ripgrep tmux ruby-full > /dev/null 2>&1
     ok "기본 패키지"
 fi
 
@@ -263,14 +261,20 @@ else
     ok "neovim"
 fi
 
-# --- herdr (tmux/tmuxinator 대체, 2026-08-24) ---
-# 설치는 install.sh 가 하지 않는다(사용자 결정) — 바이너리는 herdr.dev 에서 직접
-# 받아 ~/.local/bin 에 두고, 이후 업데이트는 `herdr update` 가 담당한다.
-# 여기서는 없을 때 안내만 한다. 설정 심링크는 아래 4번 섹션에서 건다.
-if command -v herdr &> /dev/null; then
-    skip "herdr ($(herdr --version 2>/dev/null))"
+# --- tmuxinator (tmux 자체는 Debian apt / mac Brewfile 에서 설치됨) ---
+if command -v tmuxinator &> /dev/null; then
+    skip "tmuxinator"
 else
-    info "herdr 미설치 — https://herdr.dev 에서 받아 ~/.local/bin 에 두세요"
+    if [[ "$OS" == "debian" ]]; then
+        gem install --user-install --no-document tmuxinator > /dev/null 2>&1
+        # .zshrc 의 PATH 에 이미 ~/.local/bin 이 있으므로 거기로 링크
+        mkdir -p "$HOME/.local/bin"
+        GEM_BIN="$(ruby -e 'require "rubygems"; print Gem.user_dir' 2>/dev/null)/bin/tmuxinator"
+        [[ -x "$GEM_BIN" ]] && ln -sf "$GEM_BIN" "$HOME/.local/bin/tmuxinator"
+    elif [[ "$OS" == "mac" ]]; then
+        brew install tmuxinator
+    fi
+    ok "tmuxinator"
 fi
 
 # ============================================================================
@@ -310,17 +314,30 @@ backup_and_link "$DOTFILES/starship/starship.toml" "$HOME/.config/starship/stars
 mkdir -p "$HOME/.config/yazi"
 backup_and_link "$DOTFILES/yazi/yazi.toml" "$HOME/.config/yazi/yazi.toml"
 
-# ghostty (Mac only) — 터미널 본체. 설정 파일 하나뿐
+# ghostty (Mac only) — WezTerm 과 병행. 설정 파일 하나뿐
 if [[ "$OS" == "mac" && -f "$DOTFILES/ghostty/config" ]]; then
     mkdir -p "$HOME/.config/ghostty"
     backup_and_link "$DOTFILES/ghostty/config" "$HOME/.config/ghostty/config"
 fi
 
-# herdr — 레이아웃·세션 담당 (tmux 대체). ghostty/config 의 cmd+* 패스스루가
-# 이 파일의 prefix(ctrl+b)를 전제하므로 둘은 항상 같이 배포돼야 한다.
-# mac/Debian 공통 — 원격 서버에서도 같은 키맵을 쓴다.
-mkdir -p "$HOME/.config/herdr"
-backup_and_link "$DOTFILES/herdr/config.toml" "$HOME/.config/herdr/config.toml"
+# tmux (Mac에서만 WezTerm과 함께 사용)
+backup_and_link "$DOTFILES/tmux/.tmux.conf" "$HOME/.tmux.conf"
+mkdir -p "$HOME/.config/tmux"
+backup_and_link "$DOTFILES/tmux/tmux.reset.conf" "$HOME/.config/tmux/tmux.reset.conf"
+backup_and_link "$DOTFILES/tmux/theme.conf" "$HOME/.config/tmux/theme.conf"
+if [[ -d "$DOTFILES/tmux/scripts" ]]; then
+    # ln -sfn 은 대상이 "실제 디렉토리"면 덮어쓰지 않고 그 안에 링크를 만든다.
+    # (~/.config/tmux/scripts/scripts 가 생기고, 바깥의 오래된 사본이 계속 쓰인다.
+    #  실제로 이 상태였고 dotfiles 의 스크립트 수정이 반영되지 않고 있었다.)
+    # nvim 쪽과 같은 방식으로 먼저 백업해 치운다.
+    if [[ -e "$HOME/.config/tmux/scripts" && ! -L "$HOME/.config/tmux/scripts" ]]; then
+        mv "$HOME/.config/tmux/scripts" \
+           "$HOME/.config/tmux/scripts.bak.$(date +%Y%m%d%H%M%S)"
+        info "기존 ~/.config/tmux/scripts 백업"
+    fi
+    ln -sfn "$DOTFILES/tmux/scripts" "$HOME/.config/tmux/scripts"
+    ok "symlink ~/.config/tmux/scripts → $DOTFILES/tmux/scripts"
+fi
 
 # nvim (LazyVim) — 디렉토리 통째로 심링크.
 # lazy-lock.json / lazyvim.json 은 nvim 이 직접 갱신하므로 링크여야 repo 에 반영된다.
@@ -331,6 +348,14 @@ fi
 mkdir -p "$HOME/.config"
 ln -sfn "$DOTFILES/nvim" "$HOME/.config/nvim"
 ok "symlink ~/.config/nvim → $DOTFILES/nvim"
+
+# wezterm (Mac only)
+if [[ "$OS" == "mac" ]]; then
+    mkdir -p "$HOME/.config/wezterm"
+    for f in "$DOTFILES"/wezterm/*.lua; do
+        backup_and_link "$f" "$HOME/.config/wezterm/$(basename "$f")"
+    done
+fi
 
 # ============================================================================
 # 5. ~/.zshrc.local (없을 때만 예시 복사)
@@ -344,7 +369,7 @@ fi
 
 # ============================================================================
 # 5.3 Finder 기본 앱 → 터미널 (macOS)
-#     md/json/yaml/소스코드를 더블클릭하면 Ghostty 새 창의 nvim 으로 열린다.
+#     md/json/yaml/소스코드를 더블클릭하면 WezTerm 새 창의 nvim/jless/glow 로 열린다.
 # ============================================================================
 if [[ "$OS" == "mac" && -f "$DOTFILES/macos/build-open-in-terminal.sh" ]]; then
     echo ""

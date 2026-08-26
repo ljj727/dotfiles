@@ -61,19 +61,6 @@ rm_path() {   # $1=경로  $2=설명
 }
 
 # ============================================================================
-# 1. herdr 서버부터 정지 — 실행 중이면 바이너리를 지워도 프로세스가 남는다
-# ============================================================================
-if command -v herdr &>/dev/null; then
-    info "herdr 서버 정지..."
-    if [[ $DRY_RUN -eq 1 ]]; then
-        echo "    [dry-run] herdr server stop"
-    else
-        herdr server stop >/dev/null 2>&1 || true
-        ok "herdr 서버 정지 (떠 있지 않았으면 무시됨)"
-    fi
-fi
-
-# ============================================================================
 # 2. ~/.bashrc 의 zsh 진입 블록 제거
 #    install.sh 가 마커로 감싸 두었으므로 그 구간만 잘라낸다.
 # ============================================================================
@@ -129,7 +116,7 @@ else
     for p in \
         "$BIN/zsh" "$PREFIX/share/zsh" \
         "$BIN/jq" "$BIN/eza" "$BIN/fd" "$BIN/bat" "$BIN/batcat" \
-        "$BIN/zoxide" "$BIN/starship" "$BIN/herdr" \
+        "$BIN/zoxide" "$BIN/starship" \
         "$HOME/.fzf" "$HOME/.fzf.zsh"
     do
         [[ -e "$p" || -L "$p" ]] || continue
@@ -142,7 +129,7 @@ else
     done
 
     # 설정 심링크는 dotfiles 를 가리킬 때만 제거 (직접 만든 파일 보호)
-    for dst in "$HOME/.zshrc" "$HOME/.config/starship/starship.toml" "$HOME/.config/herdr/config.toml"; do
+    for dst in "$HOME/.zshrc" "$HOME/.config/starship/starship.toml" "$HOME/.tmux.conf"; do
         if [[ -L "$dst" && "$(readlink "$dst")" == "$DOTFILES"/* ]]; then
             rm_path "$dst" "dotfiles 심링크"
         elif [[ -e "$dst" ]]; then
@@ -157,9 +144,6 @@ fi
 echo ""
 info "부수 생성물 정리..."
 
-rm_path "$HOME/.config/herdr" "herdr 설정 디렉토리"
-rm_path "$PREFIX/state/herdr" "herdr 상태 캐시"
-rm_path "$HOME/.herdr"        "herdr worktree"
 rm_path "$PREFIX/src"         "다운로드 임시 디렉토리"
 
 if [[ $REMOVE_ALL -eq 1 ]]; then
@@ -184,7 +168,7 @@ echo -e "${GREEN}═════════════════════
 echo ""
 echo "확인:"
 echo "  exec bash -l          # bash 로 돌아왔는지"
-echo "  command -v zsh eza fd bat jq herdr    # 아무것도 안 나와야 정상"
+echo "  command -v zsh eza fd bat jq    # 아무것도 안 나와야 정상"
 echo ""
 [[ $REMOVE_ALL -eq 0 ]] && echo "플러그인 캐시·머신별 설정까지 지우려면:  bash $DOTFILES/server/uninstall.sh --all"
 echo ""

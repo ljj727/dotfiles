@@ -1,21 +1,18 @@
-# Ghostty — 주 터미널. (원래 WezTerm 설정을 옮겨 온 것이라 아래 주석에
-# "WezTerm 에는 없던" 같은 비교가 남아 있다. WezTerm 은 2026-08-25 에 제거됐다.)
+# Ghostty — WezTerm 설정을 그대로 옮긴 것
 #
 # 리로드: Cmd+Shift+,        설정 열기: ghostty +edit-config
 # 테마 목록: ghostty +list-themes
 #
-# 설계: 레이아웃·세션은 전부 herdr 담당(2026-08-24, tmux 에서 이행). 이 파일은
-#       터미널 자체(폰트·색·IME·이미지 프로토콜)와 herdr 로 키를 넘기는 얇은 계층만 다룬다.
+# 설계: 레이아웃·세션은 전부 tmux 담당. 이 파일은 터미널 자체(폰트·색·IME·
+#       이미지 프로토콜)와 tmux 로 키를 넘기는 얇은 계층만 다룬다.
 
-# ── 시작 프로그램 ─────────────────────────────────────────
-# tmux 자동 시작은 제거(2026-08-24) — herdr 로 이행. 자동 실행 대신 단축키
-# ⌘⇧H 로 herdr 를 띄운다(사용자 결정: "바로 실행되는거 말고 단축키 등록").
-# 세션 유지는 herdr server 가 담당하므로 창을 닫아도 작업은 살아있다.
+# ── tmux 자동 시작 ────────────────────────────────────────
+# WezTerm: default_prog = { tmux, new-session, -A, -s, main }
+command = /opt/homebrew/bin/tmux new-session -A -s main
 
 # ── SSH / 원격 (최우선) ───────────────────────────────────
-# TERM=xterm-ghostty 가 원격에 없어 원격 TUI 가 "missing or unsuitable
-# terminal" 로 죽는 것을 막는다. ssh-terminfo 가 원격에 terminfo 를 설치해 준다.
-# (.zshrc 의 `alias ssh='TERM=xterm-256color ssh'` 가 2차 안전망.)
+# TERM=xterm-ghostty 가 원격에 없어 tmux 가 "missing or unsuitable terminal"
+# 로 죽는 것을 막는다. ssh-terminfo 가 원격에 terminfo 를 설치해 준다.
 shell-integration = zsh
 shell-integration-features = sudo,ssh-terminfo,ssh-env
 
@@ -68,7 +65,7 @@ palette = 15=#ffffff
 # WezTerm 은 window_decorations="RESIZE" 로 타이틀바를 완전히 없앴지만,
 # Ghostty 는 타이틀바 색까지 지정할 수 있어 남겨두는 편이 낫다.
 #   native / transparent / tabs / hidden 중 선택
-#   - transparent: 배경과 어우러짐 (탭을 herdr 로 쓰므로 이게 맞음)
+#   - transparent: 배경과 어우러짐 (탭을 tmux 로 쓰므로 이게 맞음)
 #   - tabs: 탭이 타이틀바에 통합 (Safari 스타일) — Ghostty 탭을 쓸 때
 #   - hidden: 완전히 없음 (WezTerm 과 동일하게 하려면 이것)
 macos-titlebar-style = transparent
@@ -137,7 +134,7 @@ keybind = clear
 
 # ── Quick Terminal — 화면 위에서 내려오는 드롭다운 터미널 ─
 # WezTerm 에는 없는 기능. global: 접두사로 앱이 비활성일 때도 동작한다.
-# herdr 세션과 별개로 잠깐 명령 하나 칠 때 쓴다.
+# tmux 세션과 별개로 잠깐 명령 하나 칠 때 쓴다.
 keybind = global:cmd+grave_accent=toggle_quick_terminal
 
 # ── 앱 레벨 (터미널이 직접 처리) ──────────────────────────
@@ -149,39 +146,32 @@ keybind = cmd+shift+equal=increase_font_size:1
 keybind = cmd+shift+minus=decrease_font_size:1
 keybind = cmd+digit_0=reset_font_size
 
-# ── herdr 실행 ────────────────────────────────────────────
-# Ghostty 에는 외부 명령 실행 액션이 없어(아래 '옮기지 못한 것' 1번과 같은 제약)
-# text: 로 셸에 명령을 타이핑한다. \x15 = Ctrl+U — 입력 중이던 줄을 지우고 실행.
-keybind = cmd+shift+h=text:\x15herdr\n
+# ── tmux 패스스루 ─────────────────────────────────────────
+# \x02 = Ctrl+B (tmux prefix). WezTerm 의 SendString 과 같은 방식.
+# 실제 동작은 전부 .tmux.conf / tmux.reset.conf 가 정의한다.
 
-# ── herdr 패스스루 ────────────────────────────────────────
-# \x02 = Ctrl+B (herdr prefix — tmux 와 같은 값이라 시퀀스만 바꾸면 됐다).
-# 실제 동작은 herdr 기본 키맵(herdr --skill 로 확인, v0.8.2). herdr 가 안 떠 있는
-# 맨 셸에서는 \x02 가 커서 한 칸 뒤로일 뿐이라 무해하다.
-
-# tab 직행 (herdr: switch_tab = prefix+1..9)
+# window 이동
 keybind = cmd+digit_1=text:\x021
 keybind = cmd+digit_2=text:\x022
 keybind = cmd+digit_3=text:\x023
 keybind = cmd+digit_4=text:\x024
 keybind = cmd+digit_5=text:\x025
 
-# 사이드바 토글 (herdr: toggle_sidebar = prefix+b. tmux 시절 커스텀 B 와 달리 소문자)
-keybind = cmd+b=text:\x02b
+# window 생성/닫기, 이전·다음
+# 왼쪽 사이드바 토글 (VS Code 관례에 맞춰 Cmd+B) → tmux prefix+B
+keybind = cmd+b=text:\x02B
 
-# tab 생성/이전·다음 (herdr: new_tab=c, previous_tab=p, next_tab=n)
 keybind = cmd+t=text:\x02c
-# cmd+w 는 close_pane(prefix+x) 이다 — tab 통째로 닫는 건 close_tab(prefix+shift+x).
-# 마지막 pane 을 닫으면 결과적으로 tab 도 닫히므로 실사용 감각은 tmux 와 같다.
 keybind = cmd+w=text:\x02x
-keybind = cmd+bracket_left=text:\x02p
-keybind = cmd+bracket_right=text:\x02n
+keybind = cmd+bracket_left=text:\x02H
+keybind = cmd+bracket_right=text:\x02L
 
-# 분할 (herdr: split_horizontal=minus 가 아래로, split_vertical=v 가 옆으로)
-keybind = cmd+shift+d=text:\x02-
+# 분할 — prefix+s 는 .tmux.conf 에서 Session 팝업으로 덮여 있으므로
+# 위아래 분할은 prefix+| 를 쓴다 (WezTerm 쪽은 아직 s 로 되어 있어 오동작 중)
+keybind = cmd+shift+d=text:\x02|
 keybind = cmd+shift+e=text:\x02v
 
-# pane 이동 — 방향키와 hjkl 둘 다 (herdr: focus_pane_h/j/k/l — tmux 와 동일)
+# pane 이동 — 방향키와 hjkl 둘 다
 keybind = cmd+arrow_left=text:\x02h
 keybind = cmd+arrow_right=text:\x02l
 keybind = cmd+arrow_up=text:\x02k
@@ -191,30 +181,31 @@ keybind = cmd+l=text:\x02l
 keybind = cmd+k=text:\x02k
 keybind = cmd+j=text:\x02j
 
-# pane 크기 조절 — 리사이즈 모드 진입 (모드 안에서 hjkl/방향키, esc 로 종료).
-# 방향별 즉시 조절은 herdr/config.toml 의 resize_pane_* 에 ctrl+shift+방향 으로
-# 걸어 뒀다(tmux 시절과 동일). ghostty 는 keybind = clear 라 그 조합을 가로채지
-# 않고 그대로 herdr 로 흘려보내므로 여기에 따로 바인딩할 것이 없다.
-keybind = cmd+r=text:\x02r
+# pane 크기 조절
+keybind = ctrl+shift+arrow_left=text:\x02,
+keybind = ctrl+shift+arrow_right=text:\x02.
+keybind = ctrl+shift+arrow_up=text:\x02=
+keybind = ctrl+shift+arrow_down=text:\x02-
 
-# zoom (herdr: zoom = prefix+z — tmux 와 동일)
+# 레이아웃 균등 · zoom
+keybind = cmd+equal=text:\x02e
+keybind = cmd+minus=text:\x02E
 keybind = cmd+z=text:\x02z
 
-# 팝업·선택기 (herdr: goto=g, workspace_picker=w, settings=s, new_workspace=shift+n)
-keybind = cmd+p=text:\x02g
+# 팝업·선택기
 keybind = ctrl+backslash=text:\x02g
 keybind = ctrl+slash=text:\x02w
 keybind = ctrl+comma=text:\x02s
-keybind = cmd+shift+n=text:\x02N
+keybind = cmd+shift+n=text:\x02S
+keybind = cmd+p=text:\x02p
+keybind = cmd+f=text:\x02f
 
-# ── tmux 시절에서 승계하지 않은 것 ────────────────────────
-# cmd+= / cmd+- 레이아웃 균등:  herdr 에 대응 동작이 없다
-# cmd+f 검색:                   herdr 에 검색 바인딩이 없다 (스크롤백은 prefix+e 로
-#                               에디터에 열어 검색하는 방식)
-# ctrl+1/2 세션 전환:           tmux 세션 개념이 사라짐 — herdr 워크스페이스 피커(⌃/)로
+# ── 옮기지 못한 것 ────────────────────────────────────────
+# 1. Ctrl+1 / Ctrl+2 세션 전환 (WezTerm: background_child_process)
+#    Ghostty 에는 외부 명령 실행 액션이 없다 → .tmux.conf 로 옮겼다:
+#      bind -n C-1 run-shell "~/.config/tmux/scripts/session-switch.sh main"
 #
-# 되찾은 것: ctrl+shift+방향 크기조절 — herdr/config.toml 의 resize_pane_* 로 복원.
-
-# ── 짝이 되는 설정 파일 ───────────────────────────────────
-# herdr/config.toml 이 prefix = "ctrl+b" 를 고정한다. 위 \x02 패스스루가 전부
-# 그 값을 전제하므로, prefix 를 바꾸려면 두 파일을 함께 고쳐야 한다.
+# 2. Cmd+Shift+B 배경 이미지 토글 (WezTerm: set_config_overrides)
+#    Ghostty 에는 런타임 설정 변경 API 가 없다. background-image 는 고정.
+#    (원본 WezTerm 설정의 이미지 경로 ~/LJJ/dotfiles/dotfiles/b.jpg 는
+#     파일이 존재하지 않아 이미 동작하지 않던 상태였다)

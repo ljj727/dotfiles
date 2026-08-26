@@ -1,4 +1,4 @@
--- 터미널(Ghostty)·herdr 와 같은 Dracula 로 통일
+-- 터미널(Ghostty)·tmux 와 같은 Dracula 로 통일
 return {
   {
     "Mofiqul/dracula.nvim",

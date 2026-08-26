@@ -12,9 +12,9 @@ set -euo pipefail
 #
 #   설치 범위 (데스크톱용 install.sh 와 다름):
 #     - zsh + 자동완성 환경 (zinit 플러그인은 첫 zsh 실행 때 자동 설치)
+#     - tmux 설정 심링크 (tmux 자체는 apt 가 필요해 설치하지 않는다)
 #     - eza / fd / bat / jq          — 사용자가 요청한 도구
 #     - fzf / zoxide / starship      — .zshrc 가 요구하므로 필수 (아래 주석 참고)
-#     - herdr                        — 원격 세션 매니저
 #
 #   설치하지 않는 것: neovim, yazi (원격 서버에 불필요 — 사용자 결정)
 #
@@ -200,25 +200,6 @@ else
 fi
 
 # ============================================================================
-# 4. herdr — 원격 세션 매니저
-#    로컬 Ghostty 의 cmd+* 패스스루가 이 설정의 prefix(ctrl+b)를 전제한다.
-# ============================================================================
-echo ""
-info "herdr 설치..."
-
-if command -v herdr &>/dev/null; then
-    skip "herdr ($(herdr --version 2>/dev/null))"
-else
-    HERDR_URL="$(curl -fsSL --max-time 30 https://herdr.dev/latest.json \
-        | grep -o '"linux-x86_64"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | cut -d'"' -f4)"
-    [[ -n "$HERDR_URL" ]] || die "herdr 다운로드 URL 조회 실패"
-    run curl -fsSL --retry 3 --connect-timeout 10 --max-time 300 -o "$BIN/herdr" "$HERDR_URL"
-    run chmod 755 "$BIN/herdr"
-    record "$BIN/herdr"
-    ok "herdr"
-fi
-
-# ============================================================================
 # 5. Symlink — 데스크톱 install.sh 와 동일한 설정을 공유한다
 # ============================================================================
 echo ""
@@ -242,7 +223,9 @@ link() {   # $1=원본  $2=대상
 
 link "$DOTFILES/zsh/.zshrc"              "$HOME/.zshrc"
 link "$DOTFILES/starship/starship.toml"  "$HOME/.config/starship/starship.toml"
-link "$DOTFILES/herdr/config.toml"       "$HOME/.config/herdr/config.toml"
+link "$DOTFILES/tmux/.tmux.conf"         "$HOME/.tmux.conf"
+link "$DOTFILES/tmux/tmux.reset.conf"    "$HOME/.config/tmux/tmux.reset.conf"
+link "$DOTFILES/tmux/theme.conf"         "$HOME/.config/tmux/theme.conf"
 
 if [[ ! -f "$HOME/.zshrc.local" ]]; then
     run cp "$DOTFILES/local/.zshrc.local.example" "$HOME/.zshrc.local"
@@ -306,7 +289,6 @@ echo "     → 첫 zsh 실행 때 zinit 이 자동으로 플러그인을 받습�
 echo "        (zsh-completions · fzf-tab · autosuggestions · syntax-highlighting)"
 echo "        수십 초 걸리고, 그동안 프롬프트가 잠깐 멈춘 것처럼 보입니다."
 echo ""
-echo "  2. 로컬 맥에서:  herdr --remote <이 서버>"
 echo ""
 echo "되돌리기:  bash $DOTFILES/server/uninstall.sh"
 echo ""
