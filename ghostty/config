@@ -1,6 +1,10 @@
-# Ghostty — WezTerm 설정을 그대로 옮긴 것
+# Ghostty — 주 터미널. 창을 띄우면 바로 tmux 로 들어간다.
 #
-# 리로드: Cmd+Shift+,        설정 열기: ghostty +edit-config
+# 원래 WezTerm 설정을 옮겨 온 것이라 아래 주석에 "WezTerm 에는 없던" 같은
+# 비교가 남아 있다. 왜 이 값인지에 대한 근거라 남겨 두지만, WezTerm 자체는
+# 2026-08 에 제거됐다 (wezterm/ 디렉토리·Brewfile cask 모두 없음).
+#
+# 리로드: Cmd+Shift+, (아래 keybind 로 직접 정의함)  설정 열기: ghostty +edit-config
 # 테마 목록: ghostty +list-themes
 #
 # 설계: 레이아웃·세션은 전부 tmux 담당. 이 파일은 터미널 자체(폰트·색·IME·
@@ -65,10 +69,20 @@ palette = 15=#ffffff
 # WezTerm 은 window_decorations="RESIZE" 로 타이틀바를 완전히 없앴지만,
 # Ghostty 는 타이틀바 색까지 지정할 수 있어 남겨두는 편이 낫다.
 #   native / transparent / tabs / hidden 중 선택
-#   - transparent: 배경과 어우러짐 (탭을 tmux 로 쓰므로 이게 맞음)
+#   - native: macOS 기본 타이틀바. 자체 배경·하단 경계를 그려서 본문과 확실히 갈린다
+#   - transparent: 배경과 어우러짐 — 경계를 "일부러 없애는" 스타일
 #   - tabs: 탭이 타이틀바에 통합 (Safari 스타일) — Ghostty 탭을 쓸 때
-#   - hidden: 완전히 없음 (WezTerm 과 동일하게 하려면 이것)
-macos-titlebar-style = transparent
+#   - hidden: 완전히 없음
+#
+# 2026-08-26: transparent → native. 타이틀바와 본문이 구분이 안 된다는 요청.
+# transparent 는 타이틀바를 터미널 배경색에 맞춰 따라가게 하는 스타일이라
+# 구조적으로 경계가 안 생긴다. native 는 macOS 가 직접 그리므로 경계가 남는다.
+#
+# [주의] 문서상 "런타임 변경은 새 창에만 적용"된다. ⌘⇧, 리로드만으로는
+#        기존 창이 안 바뀌고, 새 창을 열거나 Ghostty 를 재시작해야 한다.
+# [대가] 아래 window-titlebar-background/foreground 로 맞춘 Dracula 색은
+#        native 에서 macOS 가 그리는 부분에 안 먹을 수 있다.
+macos-titlebar-style = native
 
 # 창 크롬(타이틀바 등)을 터미널 색에서 가져온다. 직접 지정한 아래 두 값보다
 # 우선하지 않고, 시스템 다크/라이트 대신 터미널 팔레트를 따르게 하는 옵션.
@@ -83,7 +97,11 @@ window-subtitle = working-directory
 
 # 내용이 창 안에 떠 있는 느낌. 4 는 너무 빡빡했다.
 window-padding-x = 12
-window-padding-y = 12
+# 세로 패딩 0 (2026-08-26) — tmux 상태바를 창 위/아래 가장자리에 딱 붙이려는 것.
+# Ghostty 는 패딩을 그리드 전체에 적용하므로 상태바만 따로 뺄 수 없다.
+# 즉 이 값을 올리면 본문뿐 아니라 상태바도 같이 뜬다. 가로(x)는 바의 위치와
+# 무관하고 본문 가독성에 필요해서 12 로 남긴다.
+window-padding-y = 0
 window-padding-balance = true
 window-inherit-working-directory = true
 
@@ -121,6 +139,19 @@ macos-icon-frame = aluminum
 macos-option-as-alt = true
 link-url = true
 mouse-hide-while-typing = true
+
+# 스크롤 감도 (2026-08-26 — "너무 빠르다"). 기본값은 precision:1,discrete:3.
+#   precision = 트랙패드 두 손가락, discrete = 휠 마우스 한 칸. 범위 0.01~10000.
+#
+# 중요: Claude Code·nvim 처럼 alternate screen + 마우스 리포팅을 쓰는 TUI 안에서는
+# tmux 가 휠을 그대로 앱에 넘긴다(send-keys -M). 즉 tmux.reset.conf 의
+# copy-mode -N 값은 그쪽에 안 먹고, 이 배수만이 유일한 조절 수단이다.
+# (tmux -N 은 셸 스크롤백처럼 alternate screen 이 아닌 pane 에만 적용된다.)
+#
+# 실측으로 맞춘 값 — 1=너무 빠름, 0.2=아직 빠른 편, 0.05=과하게 느림,
+# 0.1=아주 조금 느림 → 0.13 으로 확정. discrete 는 같은 비율로 맞췄다.
+# 조절하려면 이 값만 고치고 ⌘⇧, 로 리로드하면 바로 반영된다.
+mouse-scroll-multiplier = precision:0.13,discrete:0.65
 # 1.3.1 은 scrollback-limit (바이트). main 브랜치는 -lines/-bytes 로 분리됐으므로
 # 나중에 업그레이드하면 이름이 바뀔 수 있다. 기본값은 10000000.
 scrollback-limit = 10000000
@@ -142,6 +173,9 @@ keybind = cmd+c=copy_to_clipboard
 keybind = cmd+v=paste_from_clipboard
 keybind = cmd+q=quit
 keybind = cmd+n=new_window
+# 설정 리로드. keybind = clear 가 기본 바인딩을 전부 지우므로 직접 넣어야 한다
+# (2026-08-26: 없는 줄 모르고 ⌘⇧, 를 눌러 왔다 — 아무 동작도 안 하고 있었다).
+keybind = cmd+shift+comma=reload_config
 keybind = cmd+shift+equal=increase_font_size:1
 keybind = cmd+shift+minus=decrease_font_size:1
 keybind = cmd+digit_0=reset_font_size
@@ -166,8 +200,8 @@ keybind = cmd+w=text:\x02x
 keybind = cmd+bracket_left=text:\x02H
 keybind = cmd+bracket_right=text:\x02L
 
-# 분할 — prefix+s 는 .tmux.conf 에서 Session 팝업으로 덮여 있으므로
-# 위아래 분할은 prefix+| 를 쓴다 (WezTerm 쪽은 아직 s 로 되어 있어 오동작 중)
+# 분할 — tmux.reset.conf 의 `bind s split-window -v` 는 .tmux.conf 의
+# `bind s display-popup`(세션 선택)이 나중에 덮으므로, 위아래 분할은 prefix+| 를 쓴다.
 keybind = cmd+shift+d=text:\x02|
 keybind = cmd+shift+e=text:\x02v
 
