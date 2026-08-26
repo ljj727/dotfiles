@@ -7,10 +7,6 @@
   "skipDangerousModePermissionPrompt": true,
   "tui": "fullscreen",
   "theme": "custom:catppuccin-mocha",
-  "editorMode": "vim",
-  "vimInsertModeRemaps": {
-    "jj": "<Esc>"
-  },
   "voice": {
     "enabled": true,
     "mode": "hold"
