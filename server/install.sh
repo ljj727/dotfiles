@@ -127,9 +127,27 @@ else
 fi
 
 # --- fd / bat — 자산 이름에 버전이 박혀 있어 API 로 태그를 먼저 조회한다 ---
+# [파이프를 쓰지 않는 이유 — 2026-08-26 실제로 여기서 설치가 죽었다]
+# 예전 구현은  curl ... | grep -m1 '"tag_name"' | cut -d'"' -f4  였다.
+# grep -m1 은 첫 매치에서 즉시 끝나며 파이프를 닫는데, 그러면 curl 이
+# 남은 응답을 쓰지 못해 "Failure writing output to destination" 으로
+# 죽는다(플랫폼에 따라 exit 23 또는 56). 이 스크립트는 set -o pipefail
+# 이라 그 실패가 파이프라인 전체의 실패가 되고, set -e 가 설치를 중단시킨다.
+# 응답이 작아 curl 이 먼저 끝나면 통과하기도 해서 재현이 들쭉날쭉했다.
+#
+# 그래서 응답을 변수에 통째로 받은 뒤 bash 문자열 치환으로만 뽑는다.
+# 외부 명령도 파이프도 없어 이 실패 자체가 불가능하다.
 gh_latest_tag() {
-    curl -fsSL --retry 3 --max-time 30 "https://api.github.com/repos/$1/releases/latest" \
-        | grep -m1 '"tag_name"' | cut -d'"' -f4
+    local json
+    json="$(curl -fsSL --retry 3 --max-time 30 \
+        "https://api.github.com/repos/$1/releases/latest")" || return 1
+    case "$json" in
+        *'"tag_name"'*) ;;
+        *) return 1 ;;
+    esac
+    json="${json#*\"tag_name\"}"   # "tag_name" 앞을 버린다
+    json="${json#*\"}"             # : 와 여는 따옴표를 버린다
+    printf '%s' "${json%%\"*}"     # 닫는 따옴표 앞까지가 태그
 }
 
 install_sharkdp() {   # $1=repo  $2=binary
