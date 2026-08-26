@@ -13,10 +13,15 @@ set -euo pipefail
 #   설치 범위 (데스크톱용 install.sh 와 다름):
 #     - zsh + 자동완성 환경 (zinit 플러그인은 첫 zsh 실행 때 자동 설치)
 #     - tmux 설정 심링크 (tmux 자체는 apt 가 필요해 설치하지 않는다)
+#     - neovim + 설정 (2026-08-26 추가 — 원격에서도 쓴다)
 #     - eza / fd / bat / jq          — 사용자가 요청한 도구
 #     - fzf / zoxide / starship      — .zshrc 가 요구하므로 필수 (아래 주석 참고)
 #
-#   설치하지 않는 것: neovim, yazi (원격 서버에 불필요 — 사용자 결정)
+#   설치하지 않는 것: yazi, LSP 서버
+#     LSP 서버를 빼는 이유: 대부분 node/go/JDK 런타임을 요구하는데 이 서버엔
+#     없다. nvim/lua/plugins/lsp.lua 가 "있으면 켜고 없으면 조용히 안 켠다"
+#     방식이라 서버가 없어도 nvim 은 정상 동작한다. 그 서버에서 꼭 필요한
+#     것만 :Mason 으로 직접 깔면 된다.
 #
 #   ※ fzf/zoxide/starship 을 "선택"으로 둘 수 없는 이유:
 #     zsh/.zshrc 의 `eval "$(zoxide init zsh)"`(152행) 와
@@ -200,6 +205,43 @@ else
 fi
 
 # ============================================================================
+# 4. neovim — 공식 릴리스 tarball ($HOME 안에만, sudo 없음)
+#    apt 의 neovim 은 보통 0.9 미만이고 여기선 apt 를 쓸 수도 없다.
+#    nvim/lua/plugins/lsp.lua 가 0.11 의 vim.lsp.config/enable 을 쓰므로
+#    0.11 이상이 필요하다 — 그보다 낮으면 있어도 새로 받는다.
+# ============================================================================
+echo ""
+info "neovim 설치..."
+
+nvim_ok() {
+    command -v nvim &>/dev/null || return 1
+    local major minor
+    read -r major minor < <(nvim --version | head -1 \
+        | sed -E 's/^NVIM v([0-9]+)\.([0-9]+).*/\1 \2/')
+    [[ "${major:-0}" -gt 0 || "${minor:-0}" -ge 11 ]]
+}
+
+if nvim_ok; then
+    skip "neovim ($(nvim --version | head -1 | awk '{print $2}'))"
+else
+    case "$(uname -m)" in
+        x86_64)        NVIM_ASSET="nvim-linux-x86_64" ;;
+        aarch64|arm64) NVIM_ASSET="nvim-linux-arm64" ;;
+        *) die "neovim: 지원하지 않는 아키텍처 $(uname -m)" ;;
+    esac
+    run curl -fsSL --retry 3 --connect-timeout 10 --max-time 300 \
+        -o "$SRC/nvim.tar.gz" \
+        "https://github.com/neovim/neovim/releases/latest/download/${NVIM_ASSET}.tar.gz"
+    run rm -rf "$PREFIX/$NVIM_ASSET"
+    run tar -xzf "$SRC/nvim.tar.gz" -C "$PREFIX"
+    run ln -sfn "$PREFIX/$NVIM_ASSET/bin/nvim" "$BIN/nvim"
+    run rm -f "$SRC/nvim.tar.gz"
+    record "$PREFIX/$NVIM_ASSET"
+    record "$BIN/nvim"
+    ok "neovim"
+fi
+
+# ============================================================================
 # 5. Symlink — 데스크톱 install.sh 와 동일한 설정을 공유한다
 # ============================================================================
 echo ""
@@ -221,11 +263,40 @@ link() {   # $1=원본  $2=대상
     ok "symlink $dst"
 }
 
+# link() 은 파일만 다룬다([[ -f ]]). 디렉토리는 이쪽을 쓴다.
+link_dir() {   # $1=원본 디렉토리  $2=대상
+    local src="$1" dst="$2"
+    [[ -d "$src" ]] || { warn "원본 없음, 건너뜀: $src"; return 0; }
+    if [[ -L "$dst" && "$(readlink "$dst")" == "$src" ]]; then
+        skip "$(basename "$dst")"; return 0
+    fi
+    # ln -sfn 은 대상이 "실제 디렉토리"면 덮어쓰지 않고 그 안에 링크를 만든다
+    # (~/.config/nvim/nvim 이 생기고 바깥의 옛 사본이 계속 쓰인다). 먼저 치운다.
+    if [[ -e "$dst" && ! -L "$dst" ]]; then
+        run mv "$dst" "${dst}.bak.$(date +%Y%m%d%H%M%S)"
+        info "기존 디렉토리 백업: $dst"
+    fi
+    run mkdir -p "$(dirname "$dst")"
+    run ln -sfn "$src" "$dst"
+    record "$dst"
+    ok "symlink $dst"
+}
+
 link "$DOTFILES/zsh/.zshrc"              "$HOME/.zshrc"
 link "$DOTFILES/starship/starship.toml"  "$HOME/.config/starship/starship.toml"
 link "$DOTFILES/tmux/.tmux.conf"         "$HOME/.tmux.conf"
 link "$DOTFILES/tmux/tmux.reset.conf"    "$HOME/.config/tmux/tmux.reset.conf"
 link "$DOTFILES/tmux/theme.conf"         "$HOME/.config/tmux/theme.conf"
+
+# tmux/scripts — .tmux.conf 와 theme.conf 가 ~/.config/tmux/scripts/ 를
+# 참조한다 (상태바의 git-info·sys-info, pane 하단바의 ssh-host,
+# 사이드바 3종, ssh/session/tmuxinator 팝업). 이게 없으면 상태바 항목이
+# 조용히 비고 bind g/s/w 팝업은 "파일 없음"으로 실패한다.
+link_dir "$DOTFILES/tmux/scripts"        "$HOME/.config/tmux/scripts"
+
+# nvim — 디렉토리 통째로. lazy-lock.json 을 nvim 이 직접 갱신하므로
+# 링크여야 그 변경이 repo 에 남는다 (데스크톱 install.sh 와 같은 이유).
+link_dir "$DOTFILES/nvim"                "$HOME/.config/nvim"
 
 if [[ ! -f "$HOME/.zshrc.local" ]]; then
     run cp "$DOTFILES/local/.zshrc.local.example" "$HOME/.zshrc.local"
