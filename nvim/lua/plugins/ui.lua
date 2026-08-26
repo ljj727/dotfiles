@@ -29,7 +29,8 @@ return {
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {
       options = {
-        diagnostics = false, -- LSP 를 안 쓰므로 진단 표시 불필요
+        -- LSP 진단 개수를 버퍼 탭에 표시 (2026-08-26 LSP 도입과 함께 켬)
+        diagnostics = "nvim_lsp",
         show_close_icon = false,
         show_buffer_close_icons = false,
         offsets = {
