@@ -16,19 +16,50 @@
 --   gr 은 저것들의 "접두사"라 gr 을 참조에 직접 매핑하면 5개가 다 깨진다.
 --   그래서 여기서는 기본에 없는 gd/gD 만 추가한다.
 
--- 서버 이름(lspconfig 기준) → 실제 실행 파일 이름
-local SERVERS = {
-  basedpyright  = "basedpyright",           -- python 타입체크·정의점프
-  ruff          = "ruff",                   -- python 린트·포매팅 (basedpyright 와 병행)
-  vtsls         = "vtsls",                  -- js/ts/jsx/tsx (react 포함)
-  gopls         = "gopls",                  -- go
-  rust_analyzer = "rust-analyzer",          -- rust
-  clangd        = "clangd",                 -- c/c++
-  jdtls         = "jdtls",                  -- java
+-- [실행파일 이름을 손으로 적지 않는다]
+--   서버 이름과 실행파일이 다른 경우가 흔하다 — pyright 는 pyright-langserver,
+--   basedpyright 는 basedpyright-langserver 로 뜬다. 표를 손으로 유지하면
+--   반드시 어긋난다(실제로 basedpyright 만 적어 두는 바람에 설치해 둔
+--   pyright 를 못 잡았다). 그래서 lspconfig 설정에서 직접 읽는다.
+--
+-- cmd 가 함수인 서버만 예외로 적는다 (정적으로 읽을 수 없다).
+local CMD_OVERRIDE = {
+  jdtls = "jdtls",
+  ts_ls = "typescript-language-server",
+}
+
+-- [택일] 같은 일을 하는 서버들. 앞에서부터 찾아 처음 발견된 하나만 켠다.
+--   여러 개가 깔려 있으면 전부 붙어 같은 진단이 두 번 뜬다.
+local PICK_ONE = {
+  python = { "basedpyright", "pyright", "pylsp" },  -- 타입체크·정의점프
+  ts     = { "vtsls", "ts_ls" },                    -- js/ts/jsx/tsx (react 포함)
+}
+
+-- [단독] 역할이 겹치지 않아 있으면 그냥 켠다.
+--   ruff 는 린트·포매팅 전담이라 위 python 타입체커와 함께 쓰는 게 정상이다.
+local ALWAYS = {
+  "ruff",
+  "gopls",         -- go
+  "rust_analyzer", -- rust
+  "clangd",        -- c/c++
+  "jdtls",         -- java
   -- 요청 목록에는 없었지만 이 repo 자체가 lua 라서 넣어 둔다.
   -- 불필요하면 이 줄만 지우면 된다 (없으면 어차피 안 켜진다).
-  lua_ls        = "lua-language-server",
+  "lua_ls",
 }
+
+-- lspconfig 가 이 서버를 띄울 때 쓰는 실행파일 이름
+local function exe_of(name)
+  local ok, cfg = pcall(function() return vim.lsp.config[name] end)
+  local cmd = ok and cfg and cfg.cmd
+  if type(cmd) == "table" then return cmd[1] end
+  return CMD_OVERRIDE[name]
+end
+
+local function have(name)
+  local exe = exe_of(name)
+  return exe ~= nil and vim.fn.executable(exe) == 1, exe
+end
 
 return {
   -- Mason — 서버를 "구하는" 수단일 뿐, LSP 동작이 여기 의존하지 않는다.
@@ -74,22 +105,48 @@ return {
       })
 
       -- ── 있는 것만 켠다 ───────────────────────────────────────────────
-      local enabled, missing = {}, {}
-      for name, exe in pairs(SERVERS) do
-        if vim.fn.executable(exe) == 1 then
+      local enabled, missing, skipped = {}, {}, {}
+
+      -- 택일 그룹: 처음 발견된 하나만. 나머지는 "겹쳐서 건너뜀"으로 기록한다.
+      for _, group in pairs(PICK_ONE) do
+        local won = nil
+        for _, name in ipairs(group) do
+          local ok = have(name)
+          if ok and not won then
+            vim.lsp.enable(name)
+            enabled[#enabled + 1] = name
+            won = name
+          elseif ok then
+            skipped[#skipped + 1] = name .. " (" .. won .. " 사용 중)"
+          end
+        end
+        if not won then
+          missing[#missing + 1] = table.concat(group, "|")
+        end
+      end
+
+      -- 단독 서버
+      for _, name in ipairs(ALWAYS) do
+        local ok, exe = have(name)
+        if ok then
           vim.lsp.enable(name)
           enabled[#enabled + 1] = name
         else
-          missing[#missing + 1] = exe
+          missing[#missing + 1] = exe or name
         end
       end
+
       table.sort(enabled)
       table.sort(missing)
+      table.sort(skipped)
 
       -- :LspStatus 로 지금 뭐가 켜졌고 뭐가 없는지 본다.
       -- (없는 서버는 오류가 아니라 "안 깐 것"이므로 시작 시 경고하지 않는다.)
       vim.api.nvim_create_user_command("LspStatus", function()
         local lines = { "활성: " .. (next(enabled) and table.concat(enabled, ", ") or "없음") }
+        if next(skipped) then
+          lines[#lines + 1] = "중복 건너뜀: " .. table.concat(skipped, ", ")
+        end
         if next(missing) then
           lines[#lines + 1] = "미설치: " .. table.concat(missing, ", ")
           lines[#lines + 1] = "  → :Mason 에서 설치하면 다음 실행부터 자동으로 켜진다"
