@@ -139,8 +139,23 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
+-- [VSCode 안에서는 플러그인을 로드하지 않는다]
+-- vscode-neovim 확장은 nvim 을 띄우고 g:vscode 를 1 로 설정한다. 이때 UI 는
+-- VSCode 가 그리므로 상태줄(lualine)·탭줄(bufferline)·파일트리(snacks)·
+-- LSP·자동완성·git 표시는 전부 VSCode 쪽과 중복이고, 서로 화면을 잡으려 해
+-- 충돌한다. 편집 동작(모션·텍스트오브젝트)만 nvim 이 맡으면 된다.
+--
+-- lazy.nvim 의 defaults.cond 가 정확히 이 용도다(공식 주석에 vscode 예시가 있다).
+-- 각 플러그인 파일을 고칠 필요 없이 여기서 한 번에 막는다.
+--
+-- VSCode 에서도 살리고 싶은 플러그인이 생기면 그 spec 에만
+-- `cond = true` 를 명시하면 이 전역 설정을 덮는다.
+--   예: mini.surround 는 순수 텍스트 조작이라 VSCode 안에서도 유용하다.
+local in_vscode = vim.g.vscode ~= nil
+
 require("lazy").setup({
   spec = { { import = "plugins" } },
+  defaults = { cond = not in_vscode },
   install = { colorscheme = { "habamax" } },
   checker = { enabled = false }, -- 업데이트 자동 확인 끔
   change_detection = { notify = false },

@@ -14,6 +14,10 @@ return {
   {
     "echasnovski/mini.surround",
     keys = { "sa", "sd", "sr", "sf", "sF", "sh" },
+    -- init.lua 의 defaults.cond 가 VSCode 안에서 모든 플러그인을 막는데,
+    -- 이건 예외로 살린다. UI 를 그리지 않고 버퍼 텍스트만 고치는 동작이라
+    -- VSCode 와 충돌할 일이 없고, VSCode 에는 대응 기능이 없다.
+    cond = true,
     opts = {},
   },
 
