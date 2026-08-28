@@ -6,7 +6,7 @@ return {
     event = "VeryLazy",
     opts = {
       options = {
-        theme = "dracula-nvim",
+        theme = "catppuccin",
         globalstatus = true, -- 분할해도 상태줄은 화면 아래 하나만
         -- 둥근 캡 (U+E0B4 / U+E0B6). FiraCode Nerd Font 에 두 글리프가 있는지
         -- fontTools 로 확인했다 — 없으면 두부(□)로 나온다.

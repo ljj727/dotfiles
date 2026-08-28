@@ -21,49 +21,28 @@ shell-integration = zsh
 shell-integration-features = sudo,ssh-terminfo,ssh-env
 
 # ── 폰트 ──────────────────────────────────────────────────
-# WezTerm: font_with_fallback{FiraCode NF, MesloLGS NF, Symbols NF, Apple Color Emoji}
+# 2026-08-28: FiraCode → JetBrainsMono. x-height 가 높고 글자폭이 일정해
+# 작은 크기에서도 덜 뭉갠다. Nerd Font 변형이라 상태줄 아이콘이 그대로 나온다.
 # 여러 번 선언하면 앞에서부터 폴백된다.
-font-family = FiraCode Nerd Font
-font-family = MesloLGS NF
+#   +list-fonts 로 확인한 정확한 이름이 "JetBrainsMono Nerd Font Mono" 다.
+#   "JetBrains Mono"(Nerd 아님)와 다른 폰트이니 이름을 줄이면 안 된다.
+font-family = JetBrainsMono Nerd Font Mono
 font-family = Apple Color Emoji
-# WezTerm 설정에 있던 "Symbols Nerd Font" 는 이 머신에 미설치라 뺐다.
-# FiraCode Nerd Font 가 이미 Nerd 글리프를 포함하므로 실질 손실 없음.
-font-size = 15
+font-size = 14
 # Retina 에서 글자가 얇게 보이는 것 보정
 font-thicken = true
 # 행간 — 가독성·인상 차이가 가장 큰 값. 0% 가 기본
-adjust-cell-height = 12%
-# 타이틀바 폰트도 지정 가능 (WezTerm 에는 없던 옵션)
-window-title-font-family = FiraCode Nerd Font
+adjust-cell-height = 15%
+window-title-font-family = JetBrainsMono Nerd Font Mono
 
 # 한글은 D2Coding 으로 (코드포인트 범위 지정 — WezTerm 보다 정밀함)
 font-codepoint-map = U+AC00-U+D7A3,U+1100-U+11FF,U+3130-U+318F=D2CodingLigature Nerd Font
 
-# ── 색 (Dracula 공식 팔레트 — WezTerm 설정과 동일한 값) ───
-# theme = Dracula 로도 되지만, 기존 값과 100% 동일하게 하려고 직접 지정.
-background = #282a36
-foreground = #f8f8f2
-cursor-color = #f8f8f2
-cursor-text = #282a36
-selection-background = #44475a
-selection-foreground = #f8f8f2
-
-palette = 0=#21222c
-palette = 1=#ff5555
-palette = 2=#50fa7b
-palette = 3=#f1fa8c
-palette = 4=#bd93f9
-palette = 5=#ff79c6
-palette = 6=#8be9fd
-palette = 7=#f8f8f2
-palette = 8=#6272a4
-palette = 9=#ff6e6e
-palette = 10=#69ff94
-palette = 11=#ffffa5
-palette = 12=#d6acff
-palette = 13=#ff92df
-palette = 14=#a4ffff
-palette = 15=#ffffff
+# ── 색 ────────────────────────────────────────────────────
+# 2026-08-28: Dracula → Catppuccin Mocha. 팔레트 22줄을 직접 쓰던 것을
+# Ghostty 내장 테마로 대체한다(+list-themes 에서 확인). 색 정의가 한 곳으로
+# 모여서 tmux/theme.conf 와 어긋날 여지가 줄었다.
+theme = Catppuccin Mocha
 
 # ── 윈도우 ────────────────────────────────────────────────
 # WezTerm 은 window_decorations="RESIZE" 로 타이틀바를 완전히 없앴지만,
@@ -88,9 +67,10 @@ macos-titlebar-style = native
 # 우선하지 않고, 시스템 다크/라이트 대신 터미널 팔레트를 따르게 하는 옵션.
 window-theme = ghostty
 
-# 타이틀바를 Dracula 팔레트에 맞춤 (WezTerm 에는 없던 기능)
-window-titlebar-background = #21222c
-window-titlebar-foreground = #6272a4
+# 타이틀바 색 — macos-titlebar-style = native 에서는 macOS 가 직접 그려서
+# 안 먹을 수 있다. transparent 로 되돌릴 때를 위해 Catppuccin 값으로 맞춰 둔다.
+window-titlebar-background = #181825
+window-titlebar-foreground = #a6adc8
 
 # 타이틀바에 현재 작업 디렉토리를 부제로 표시
 window-subtitle = working-directory
@@ -108,7 +88,7 @@ window-inherit-working-directory = true
 # 리사이즈 시 패딩도 배경색으로 채워 빈틈이 안 보이게
 window-padding-color = extend
 
-# 넓은 색역 — 2560x1600 디스플레이에서 Dracula 색이 더 정확하게 나온다
+# 넓은 색역 — 2560x1600 디스플레이에서 색이 더 정확하게 나온다
 window-colorspace = display-p3
 
 # ── 반투명 · 블러 (WezTerm 에는 블러가 아예 없다) ─────────
@@ -122,7 +102,7 @@ background-blur = 30
 alpha-blending = linear-corrected
 
 # 배경 대비 명암비 하한. 기본 1 은 "강제하지 않음".
-# Dracula 의 주석색(#6272a4)이 배경(#282a36) 위에서 흐린 편인데,
+# Catppuccin 의 주석색(overlay0 #6c7086)이 배경(base #1e1e2e) 위에서 흐린 편인데,
 # 이 값을 올리면 그런 저대비 글자만 자동으로 밝아진다. 팔레트 전체를
 # 바꾸지 않고 안 보이는 것만 끌어올리는 방식.
 # 1.0=끄기 / 1.5=은은 / 3=뚜렷 / 21=최대(팔레트가 뭉개짐)

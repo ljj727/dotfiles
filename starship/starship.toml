@@ -26,7 +26,6 @@ $git_state\
 $git_status\
 $hg_branch\
 $pijul_channel\
-$docker_context\
 $package\
 $c\
 $cpp\
@@ -275,10 +274,6 @@ format = " pixi [$symbol$version ($environment )]($style)"
 [dart]
 symbol = "◁◅ "
 format = " dart [$symbol($version )]($style)"
-
-[docker_context]
-symbol = "◧ "
-format = " docker [$symbol$context]($style)"
 
 [elixir]
 symbol = "△ "

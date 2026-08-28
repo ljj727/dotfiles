@@ -65,8 +65,6 @@ brew "libtool"
 brew "graphviz"
 # Like cURL, but for gRPC
 brew "grpcurl"
-# Smarter Dockerfile linter to validate best practices
-brew "hadolint"
 # Get events and tasks from the macOS calendar database
 brew "ical-buddy"
 # Command-line pager for JSON data
