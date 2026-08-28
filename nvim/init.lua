@@ -160,3 +160,43 @@ require("lazy").setup({
   checker = { enabled = false }, -- 업데이트 자동 확인 끔
   change_detection = { notify = false },
 })
+
+-- ── VSCode 전용 키맵 ────────────────────────────────────────────────────────
+-- 플러그인이 전부 꺼져 있으므로(위 defaults.cond) fzf-lua 의 <leader>f* 가
+-- 없다. 손버릇은 유지하면서 VSCode 의 대응 기능이 뜨게 연결한다.
+--
+-- [floating 미리보기는 포기해야 한다] vscode-neovim 은 nvim 의 floating
+-- window 를 그리지 못한다 — UI 를 ext_multigrid 로 받으면서도 win_float_pos
+-- 이벤트 핸들러가 없다(확장 번들에서 확인). 그래서 fzf-lua 창 자체가 화면에
+-- 나타나지 않는다. 대신 VSCode 의 Quick Open 이 같은 자리를 대신한다.
+--
+-- ⌘P·⇧⌘F 같은 VSCode 기본 키는 그대로 두고, leader 키만 추가로 얹는다.
+if vim.g.vscode then
+  -- pcall 로 감싼다. 이 모듈은 vscode-neovim 확장이 런타임 경로에 넣어주는
+  -- 것이라 확장 밖(예: g:vscode 만 켜고 띄우는 테스트)에서는 없다.
+  -- require 가 실패하면 init.lua 전체가 중단되므로 조용히 건너뛴다.
+  local ok, vscode = pcall(require, "vscode")
+  if not ok then return end
+  local function act(cmd, opts)
+    return function() vscode.action(cmd, opts) end
+  end
+  local map = vim.keymap.set
+
+  map("n", "<leader><space>", act("workbench.action.quickOpen"), { desc = "파일 찾기" })
+  map("n", "<leader>ff", act("workbench.action.quickOpen"), { desc = "파일 찾기" })
+  map("n", "<leader>fb", act("workbench.action.showAllEditors"), { desc = "버퍼 목록" })
+  map("n", "<leader>fc", act("workbench.action.showCommands"), { desc = "명령 목록" })
+  map("n", "<leader>fg", act("workbench.action.findInFiles"), { desc = "전역 그렙" })
+  map("n", "<leader>fr", act("workbench.action.openRecent"), { desc = "최근 파일" })
+  map("n", "<leader>fs", act("workbench.view.scm"), { desc = "git 변경 파일" })
+  -- 커서 아래 단어로 검색을 채워서 연다. seedWithNearestWord 설정에 기대지
+  -- 않고 인자로 직접 넘긴다 — 그 설정은 검색창이 "포커스를 받을 때"만 듣는다.
+  map("n", "<leader>fw", function()
+    vscode.action("workbench.action.findInFiles", { args = { query = vim.fn.expand("<cword>") } })
+  end, { desc = "커서 단어 그렙" })
+
+  -- 대응이 없어 뺀 것:
+  --   <leader>fh  도움말 검색 — nvim :help 라 VSCode 에 개념이 없다
+  --   <leader>ft  TODO 목록   — 내장 기능이 아니다 (todo-tree 같은 확장 필요)
+end
+
