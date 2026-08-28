@@ -1,300 +1,282 @@
 {
+  "window.newWindowDimensions": "inherit",
+  "window.nativeFullScreen": true,
+  "window.titleBarStyle": "custom",  // Title Bar는 유지
+
+  // ========== Workbench ==========
+  // "workbench.editor.showTabs": "none",
+  "workbench.editor.showTabs": "multiple",  // 또는 "multiple"
+  // Tab 크기 조절
+
+  "workbench.startupEditor": "none",
+  "workbench.sideBar.location": "left",
+  // "workbench.tree.indent": 7,
+  "workbench.tree.enableStickyScroll": false,
+  // "workbench.secondarySideBar.defaultVisibility": "hidden",
+  // "workbench.editor.editorActionsLocation": "hidden",
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.list.smoothScrolling": true,
+
+
+  // ========== Editor ==========
+  "editor.fontSize": 14,
+  // "editor.contextmenu": false,
+  // "editor.lineHeight": 20,
+  // "editor.fontFamily": "Monaspace",
+  "editor.cursorSurroundingLines": 15,  // 위아래 10줄 유지
+  "editor.cursorSurroundingLinesStyle": "all",  // 항상 적용
+  "editor.hover.enabled": "on",
+  "editor.hover.delay": 500,
+  "editor.fontWeight": "400",
+  "editor.fontLigatures": false,
+  "editor.cursorBlinking": "solid",
+  "editor.wordWrap": "wordWrapColumn",
+  "editor.wordWrapColumn": 120,
+  "editor.wordSeparators": "`~!@#%^&*()=+[{]}\\|;:'\",.<>/?",
+  "editor.padding.top": 7,
+  "editor.mouseWheelZoom": true,
+  "editor.acceptSuggestionOnCommitCharacter": true,
+  "editor.tabCompletion": "on",
+
+  // // ========== Editor - UI Elements ==========
+  // "editor.lineNumbers": "off",
+  "editor.minimap.enabled": false,
+  "editor.glyphMargin": false,
+  "editor.showFoldingControls": "never",
+  "editor.overviewRulerBorder": false,
+  "editor.hideCursorInOverviewRuler": true,
+  "editor.stickyScroll.enabled": false,
+  "breadcrumbs.enabled": false,
+
+  // ========== Editor - Guides & Decorations ==========
+  // "editor.guides.indentation": true,
+  "editor.guides.highlightActiveIndentation": true,
+  "editor.guides.highlightActiveBracketPair": true,
+  "editor.colorDecorators": true,
+  "editor.renderWhitespace": "none",
+  "editor.renderControlCharacters": false,
+
+
+  // ========== Editor - Behavior ==========
+  "editor.linkedEditing": true,
+  // "editor.formatOnSave": true,
+  // "editor.formatOnPaste": true,
+  // "editor.copyWithSyntaxHighlighting": false,
+  // "editor.emptySelectionClipboard": false,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.acceptSuggestionOnEnter": "smart",
+  // "editor.scrollbar.vertical": "hidden",
+  // "editor.scrollbar.horizontal": "hidden"
+  // "editor.accessibilitySupport": "off",
+  "editor.snippetSuggestions": "top",
+  "editor.suggestSelection": "first",
+  "editor.suggestFontSize": 16,
+  "editor.suggestLineHeight": 30,
+  "editor.inlineSuggest.suppressSuggestions": false,
+  // "editor.quickSuggestions": {
+  //     "other": true,
+  //     "comments": true,
+  //     "strings": true
+  // },
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "on",
+    "strings": "on"
+  },
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.selectionHighlight": true,
+  "editor.occurrencesHighlight": "off",
+  "editor.gotoLocation.multipleReferences": "goto",
+  "editor.gotoLocation.multipleDefinitions": "goto",
+  "editor.gotoLocation.multipleDeclarations": "goto",
+  "editor.gotoLocation.multipleImplementations": "goto",
+  "editor.gotoLocation.multipleTypeDefinitions": "goto",
+  "editor.smoothScrolling": true,
+  "editor.cursorSmoothCaretAnimation": "on",
+  // ========== Editor - Token Colors ==========
+  "editor.tokenColorCustomizations": {
+      "textMateRules": [
+          {
+              "scope": [
+                  "comment",
+                  "keyword",
+                  "variable.language",
+                  "entity.other.attribute-name.html",
+                  "entity.other.attribute-name",
+                  "keyword.control",
+                  "storage.type",
+                  "comment.block",
+                  "comment.line"
+              ],
+              "settings": {
+                  "fontStyle": ""
+              }
+          }
+      ]
+  },
+
+  // // ========== Files ==========
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.autoSave": "afterDelay",
+
+  // // ========== Explorer ==========
+  "explorer.sortOrder": "default",
+  "explorer.confirmDragAndDrop": false,
+  // "explorer.confirmDelete": false,
+  // "explorer.compactFolders": true,
+  "explorer.decorations.colors": true,
+  "explorer.decorations.badges": true,
+  "problems.decorations.enabled": true,
+
+  // ========== Terminal ==========
+  "terminal.integrated.fontFamily": "MesloLGS NF",
+  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.inheritEnv": false,
+  "terminal.integrated.gpuAcceleration": "on",
+  "terminal.integrated.copyOnSelection": true,
+  "terminal.integrated.tabs.location": "right",
+
+  // // ========== Git ==========
+  // "git.autofetch": true,
+  // "git.enableSmartCommit": true,
+  // "git.confirmSync": true,
+  // "git.replaceTagsWhenPull": true,
+  // "git.openRepositoryInParentFolders": "always",
+  "git.decorations.enabled": true,
+  "scm.diffDecorations": "all",
+
+  // // ========== GitHub ==========
+  // "githubPullRequests.createOnPublishBranch": "never",
+  // "githubPullRequests.pullBranch": "never",
+
+  // // ========== GitLens ==========
+  // "gitlens.hovers.currentLine.over": "line",
+
+  // 인라인 제안 — Copilot 전용이 아니라 코어 설정이라 남긴다.
+  "editor.inlineSuggest.enabled": true,
+
+  // "material-icon-theme.files.color": "#42a5f5",
+
   "extensions.experimental.affinity": {
     "asvetliakov.vscode-neovim": 1
   },
-  "workbench.colorTheme": "Dracula",
-  "workbench.iconTheme": "material-icon-theme",
-  "workbench.sideBar.location": "left",
-  // "editor.fontFamily": "FiraCode Nerd Font",
-  "editor.fontFamily": "MesloLGS NF",
-  "editor.fontSize": 15,
-  "editor.lineHeight": 22,
-  "editor.formatOnSave": false,
-  "editor.acceptSuggestionOnEnter": "smart",
-  "editor.cursorBlinking": "smooth",
-  // "editor.cursorStyle": "underline",
-  "editor.cursorSurroundingLines": 10,
-  "editor.fontLigatures": true,
-  "editor.autoClosingDelete": "always",
-  //자동 줄 바꿈
-  "editor.wordWrap": "wordWrapColumn",
-  "editor.wordWrapColumn": 100,
-  // "editor.largeFileOptimizations": false,
-  "editor.suggestSelection": "first",
-  // "editor.accessibilitySupport": "off",
-  "editor.snippetSuggestions": "bottom",
-  "terminal.integrated.fontSize": 15,
-  "terminal.integrated.fontFamily": "MesloLGS NF",
-  "terminal.integrated.copyOnSelection": true,
-  "terminal.external.osxExec": "iTerm.app",
-  "explorer.confirmDragAndDrop": false,
-  "explorer.confirmDelete": false,
-  "files.eol": "\n",
-  "emmet.showSuggestionsAsSnippets": true,
-  "git.autofetch": true,
-  "material-icon-theme.folders.theme": "specific",
-  "material-icon-theme.saturation": 1.0,
-  "material-icon-theme.showWelcomeMessage": false,
-  "gitlens.hovers.currentLine.over": "line",
-  "vscode-neovim.mouseSelectionStartVisualMode": true,
-  "vscode-neovim.revealCursorScrollLine": true,
-  "whichkey.sortOrder": "alphabetically",
-  "files.autoSave": "onFocusChange",
-  "editor.renderWhitespace": "none",
+  "vscode-neovim.neovimExecutablePaths.darwin": "/opt/homebrew/bin/nvim",
+  "terminal.integrated.smoothScrolling": true,
+
   "workbench.colorCustomizations": {
-    "editor.background": "#1f1b2a",
-    "breadcrumb.foreground": "#d5e957",
-    "breadcrumb.focusForeground": "#f17c58",
+    "titleBar.activeBackground": "#1e1e2e",
+    "editor.background": "#1e1e2e",
+    "terminal.background": "#1e1e2e",
+    "panel.background": "#1e1e2e",
+    "statusBar.background": "#1e1e2e",
+    "sideBar.background": "#1e1e2e",
+    "sideBar.border": "#1e1e2e00",  // 투명
+    "editorGroupHeader.noTabsBackground": "#1e1e2e",
+    "editorGroup.border": "#1e1e2e00",  // 투명
+    "sideBarSectionHeader.border": "#1e1e2e00",  // 투명
+    // "editorGroup.border": "#1e1e2e",
+    "editorGroupHeader.tabsBackground": "#1e1e2e",
+    "statusBarItem.remoteBackground": "#1e1e2e",  // Remote 배경
+
+    // "editorIndentGuide.background": "#1e1e2e",  // 거의 안 보이게
+
+
+    "editorBracketHighlight.foreground": "#f5c2e7",
+    "titleBar.activeForeground": "#cdd6f4",
+    "titleBar.inactiveBackground": "#1e1e2e",
+
+    // Tab 색상 조정
+    "tab.activeBackground": "#1e1e2e",  // Active도 같은 색
+    "tab.inactiveBackground": "#1e1e2e",
+    "tab.activeForeground": "#cdd6f4",  // Active - 밝게
+    "tab.inactiveForeground": "#6c7086",  // Inactive - 어둡게
+    "tab.hoverBackground": "#313244",  // 살짝만
+    "tab.hoverForeground": "#cdd6f4",
+    "tab.activeModifiedBorder": "#f38ba8",  // Red
+    "tab.inactiveModifiedBorder": "#6c7086",  // 어두운 회색
+    "tab.border": "#1e1e2e",
+    "tab.activeBorder": "#1e1e2e",
+    "tab.activeBorderTop": "#1e1e2e",
+    "tab.hoverBorder": "#1e1e2e",
+      // Tab에서 Git badge 색상은 여기로!
+    "badge.foreground": "#ddd782",  // Badge 텍스트 (숫자)
+
+    // 또는 전역 Git decoration 색상
+    "gitDecoration.modifiedResourceForeground": "#6c7086",
+    "gitDecoration.untrackedResourceForeground": "#6c7086",
+    "gitDecoration.deletedResourceForeground": "#6c7086",
+    "gitDecoration.conflictingResourceForeground": "#6c7086",
+    "gitDecoration.ignoredResourceForeground": "#6c708650",
+
+
     "statusBar.debuggingBackground": "#28684a",
     "statusBar.noFolderBackground": "#38386b",
-    "statusBar.background": "#492579",
     "editor.lineHighlightBackground": "#404346",
     "editor.lineHighlightBorder": "#404346",
     "editor.selectionBackground": "#2f4d50",
-    "editorLineNumber.activeForeground": "#def50c",
+    "editorLineNumber.foreground": "#00000000",  // 투명
+    // "editorLineNumber.activeForeground": "#bd93f9",
+
+    "editorLineNumber.activeForeground": "#f9e2af",
+    "editorSuggestWidget.selectedBackground": "#45475a",  // Surface1
+    "editorSuggestWidget.focusHighlightForeground": "#f38ba8",
+    "editorSuggestWidget.selectedIconForeground": "#f38ba8",  // Blue
+
+
+
+    "statusBarItem.remoteForeground": "#cdd6f4",
+    "statusBar.foreground": "#cdd6f4",
+    "editorIndentGuide.activeBackground1": "#cba6f7",
+
+    "scrollbarSlider.background": "#585b7040",  // Surface2 + alpha
+    "scrollbarSlider.hoverBackground": "#585b7080",  // 호버시 더 진하게
+    "scrollbarSlider.activeBackground": "#585b70cc",  // 클릭시 가장 진하게
+    "editorOverviewRuler.background": "#1e1e2e00",  // 투명
+    "editorOverviewRuler.border": "#1e1e2e00",  // 투명
+
+    // Git decorations 숨기기
+
+    // Status Bar 세밀화
+    "statusBarItem.activeBackground": "#1e1e2e",
+    "statusBarItem.hoverBackground": "#313244",
+
+    // Notifications
+    "notifications.background": "#1e1e2e",
+    "notifications.border": "#313244",
+
+    // Input/Dropdown
+    "input.background": "#1e1e2e",
+    "input.border": "#313244",
+    "dropdown.background": "#1e1e2e",
+    "dropdown.border": "#313244",
+    "list.hoverBackground": "#313244",
+    "list.activeSelectionBackground": "#313244",
+
+    // Command Palette
+    "quickInput.background": "#1e1e2e",
+    "quickInput.foreground": "#cdd6f4",
+    "quickInputList.focusBackground": "#313244",
   },
-  "editor.tokenColorCustomizations": {
-    "textMateRules": [
-      {
-        "scope": "entity.name.type.class",
-        "settings": {
-          // "foreground": "#F5c66b",
-          "fontStyle": "bold"
-        }
-      },
-      {
-        "scope": "variable",
-        "settings": {
-          "foreground": "#ffe1c2"
-        }
-      },
-      {
-        "scope": "meta.function-call.generic.python",
-        "settings": {
-          "foreground": "#ffffff"
-        }
-      },
-      {
-        "scope": "source.python",
-        "settings": {
-          "foreground": "#ffffff"
-        }
-      },
-    ]
-  },
-  "workbench.editor.showTabs": "multiple",
-  "zenMode.hideLineNumbers": false,
-  "zenMode.hideStatusBar": false,
-  "editor.bracketPairColorization.enabled": true,
-  "sync.gist": "f864a35b6aca10b5f46dd9101530adcd",
-  "terminal.integrated.gpuAcceleration": "on",
-  "editor.mouseWheelZoom": true,
-  "code-runner.executorMap": {
-    "python": "python3 -u",
-  },
-  "editor.hover.enabled": true,
-  "editor.codeLens": true,
-  "python.defaultInterpreterPath": "/home/ljj/virtualenv/venv-anti/bin/python3.8",
+
+  "database-client.autoSync": true,
+  "workbench.secondarySideBar.defaultVisibility": "hidden",
+  "workbench.editor.editorActionsLocation": "hidden",
+  "chat.commandCenter.enabled": false,
+  "workbench.editor.tabActionCloseVisibility": false,
   "git.enableSmartCommit": true,
-  "terminal.integrated.inheritEnv": false,
-  "security.workspace.trust.untrustedFiles": "open",
-  "window.titleBarStyle": "custom",
-  "editor.minimap.enabled": false,
-  "git.confirmSync": true,
+  "claudeCode.preferredLocation": "sidebar",
+  "git.confirmSync": false,
+  "workbench.activityBar.location": "bottom",
+  "githubPullRequests.createOnPublishBranch": "never",
+  "redhat.telemetry.enabled": true,
+  "window.confirmSaveUntitledWorkspace": false,
+  "workbench.layoutControl.enabled": false,
+  "workbench.navigationControl.enabled": false,
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"
   },
-  "whichkey.delay": 0,
-  "vim.leader": "<space>",
-  "vim.easymotion": true,
-  "vim.incsearch": true,
-  "vim.useSystemClipboard": true,
-  "vim.useCtrlKeys": true,
-  "vim.hlsearch": true,
-  "vim.sneak": true,
-  "vim.normalModeKeyBindings": [
-    {
-      "before": [
-        "<leader>", "e"
-      ],
-      "commands": [
-        "workbench.action.toggleSidebarVisibility"
-      ]
-    },
-    {
-      "before": [
-        "<leader>", "t"
-      ],
-      "commands": [
-        "workbench.action.togglePanel"
-      ]
-    },
-    {
-      "before": [
-        "S-H"
-      ],
-      "commands": [
-        "workbench.action.previousEditor"
-      ]
-    },
-    {
-      "before": [
-        "S-L"
-      ],
-      "commands": [
-        "workbench.action.nextEditor"
-      ]
-    },
-    {
-      "before": [
-        "<leader>", "e"
-      ],
-      "commands": [
-        "workbench.action.toggleSidebarVisibility"
-      ],
-      // "commands": ["workbench.view.explorer"]
-    },
-    {
-        "before": [
-          "<leader>", "w"
-        ],
-        "commands": [
-          "workbench.action.files.save"
-        ],
-      },
-      {
-        "before": [
-          "<leader>", "/"
-        ],
-        "commands": [
-          "editor.action.commentLine"
-        ],
-      },
-      {
-        "before": [
-          "<leader>", "/"
-        ],
-        "commands": [
-          "editor.action.commentLine"
-        ],
-      },
-      {
-        "before": [
-          "<leader>", "f"
-        ],
-        "commands": [
-          "workbench.action.quickOpen"
-        ],
-      },
-      {
-        "before": [
-          "<leader>", "c"
-        ],
-        "commands": [
-          "workbench.action.closeActiveEditor"
-        ],
-      }
-    ],
-"vim.visualModeKeyBindings": [
-  {
-    "before": [
-        "<leader>", "/"
-      ],
-    "commands": [
-      "editor.action.commentLine"
-    ],
-  },
-  {
-    "before": [
-      ">"
-    ],
-    "commands": [
-      "editor.action.indentLines"
-    ]
-  },
-  {
-    "before": [
-      "<"
-    ],
-    "commands": [
-      "editor.action.outdentLines"
-    ]
-  }
-],
-"vim.insertModeKeyBindings": [],
-"vim.normalModeKeyBindingsNonRecursive": [
-  {
-    "before": [
-      "<leader>", "h"
-    ],
-    "after": [
-      "_"
-    ]
-  },
-  {
-    "before": [
-      "<leader>", "l"
-    ],
-    "after": [
-      "$"
-    ]
-  },
-  {
-    "before": [
-      "<leader>", "s"
-    ],
-    "commands": [
-      "workbench.action.splitEditor"
-    ]
-  },
-  {
-    "before": [
-      "<leader>", "]"
-    ],
-    "commands": [
-      "workbench.action.increaseViewWidth"
-    ]
-  },
-  {
-    "before": [
-      "<leader>", "["
-    ],
-    "commands": [
-      "workbench.action.decreaseViewWidth"
-    ]
-  },
-  {
-    "before": [
-      "<leader>", "="
-    ],
-    "commands": [
-      "workbench.action.decreaseViewHeight"
-    ]
-  },
-  {
-    "before": [
-      "<leader>", "-"
-    ],
-    "commands": [
-      "workbench.action.increaseViewHeight"
-    ]
-  },
-  {
-    "before": [
-      ">"
-    ],
-    "commands": [
-      "editor.action.indentLines"
-    ]
-  },
-  {
-    "before": [
-      "<"
-    ],
-    "commands": [
-      "editor.action.outdentLines"
-    ]
-  }
-],
-"window.zoomLevel": 1,
+  "chat.titleBar.openInAgentsWindow.enabled": false
 }
