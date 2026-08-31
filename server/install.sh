@@ -447,6 +447,40 @@ else
     echo "      급하면 이 서버에서:  export TERM=xterm-256color"
 fi
 
+# ── terminfo 레이아웃 미러링 ────────────────────────────────────────────────
+# ncurses 는 terminfo 를 두 가지 디렉토리 레이아웃으로 찾는다:
+#   알파벳식  ~/.terminfo/x/xterm-ghostty      ← 시스템 tic 이 만드는 쪽
+#   16진식    ~/.terminfo/78/xterm-ghostty     ← 78 = 'x' 의 hex
+# 어느 쪽을 보는지는 ncurses 빌드 옵션(--enable-termcap 등)에 달렸고, 한쪽만
+# 있으면 다른 빌드는 못 찾는다.
+#
+# 실제로 물렸다 (2026-08-31, node-06):
+#   bash 의 tput 은 잘 되는데 zsh 안에서만 terminfo 조회가 실패했다.
+#   zsh-bin 정적 빌드가 자체 ncurses(16진식)를 쓰고, 서버 tic 은 알파벳식으로
+#   설치했기 때문이다. el(줄 지우기) 능력이 비어서 ZLE 가 줄을 못 지우고
+#   `ls` 를 치면 `lsls` 처럼 글자가 겹쳐 보였다.
+#
+# 파일 형식은 양쪽이 같으므로 복사만 하면 된다.
+if [[ -d "$HOME/.terminfo" ]]; then
+    mirrored=0
+    for src in "$HOME"/.terminfo/*/*; do
+        [[ -f "$src" ]] || continue
+        name="$(basename "$src")"
+        first="${name:0:1}"
+        hex="$(printf '%x' "'$first")"
+        for want in "$first" "$hex"; do
+            dst="$HOME/.terminfo/$want/$name"
+            [[ -f "$dst" ]] && continue
+            run mkdir -p "$HOME/.terminfo/$want"
+            run cp "$src" "$dst"
+            mirrored=$((mirrored + 1))
+        done
+    done
+    if [[ $mirrored -gt 0 ]]; then
+        ok "terminfo 레이아웃 미러링 ($mirrored 개 — zsh-bin 이 못 찾던 항목)"
+    fi
+fi
+
 # PATH 안내 — .zshrc:4 가 이미 ~/.local/bin 을 넣지만, bash 로 들어올 때 필요
 case ":${PATH}:" in
     *":$BIN:"*) ok "PATH 에 $BIN 포함됨" ;;
