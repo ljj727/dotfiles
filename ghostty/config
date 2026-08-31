@@ -204,6 +204,14 @@ keybind = ctrl+shift+arrow_down=text:\x02-
 # 레이아웃 균등 · zoom
 keybind = cmd+equal=text:\x02e
 keybind = cmd+minus=text:\x02E
+
+# 페이지 스크롤 — tmux 의 prefix+_ / prefix++ 로 넘긴다.
+# 그쪽에서 copy-mode 진입과 페이지 이동을 한 번에 처리한다(tmux.reset.conf).
+# ctrl+- / ctrl+= 는 표준 제어문자가 없어 터미널마다 인코딩이 다르므로,
+# 그대로 흘려보내지 않고 여기서 prefix 시퀀스로 바꿔 보낸다.
+# VSCode 의 터미널 페이지 스크롤과 같은 키로 맞췄다.
+keybind = ctrl+minus=text:\x02_
+keybind = ctrl+equal=text:\x02+
 keybind = cmd+z=text:\x02z
 
 # 팝업·선택기
