@@ -5,7 +5,8 @@ set -euo pipefail
 # 원격 서버용 경량 설치 — Ubuntu / sudo 없음
 #
 #   사용법:  bash ~/dotfiles/server/install.sh
-#            bash ~/dotfiles/server/install.sh --dry-run   미리보기
+#            bash ~/dotfiles/server/install.sh --dry-run    미리보기
+#            bash ~/dotfiles/server/install.sh --auto-zsh   로그인 시 zsh 자동 진입
 #
 #   대상: root 권한이 없는 Ubuntu 서버 (공용 서버의 개인 계정 포함).
 #         전부 $HOME 안에만 쓴다 — apt·/usr/local·/etc 는 건드리지 않는다.
@@ -29,6 +30,12 @@ set -euo pipefail
 #     `eval "$(starship init zsh)"`(157행) 이 가드 없이 호출된다.
 #     없으면 셸을 열 때마다 에러가 난다. fzf 는 fzf-tab 플러그인이 쓴다.
 #
+#   로그인 셸은 건드리지 않는다 (2026-08-31).
+#     기본값은 "bash 로 로그인하고, 필요할 때 zsh 를 직접 실행"이다.
+#     공용 서버에서는 로그인 흐름이 조용한 편이 낫다 — scp/rsync·CI·배포
+#     스크립트가 대화형 여부를 잘못 판단하면 셸을 갈아치우는 쪽이 먼저 깨진다.
+#     자동 진입을 원하면 --auto-zsh 를 준다 (섹션 6).
+#
 #   되돌리기: bash ~/dotfiles/server/uninstall.sh
 # ============================================================================
 
@@ -39,7 +46,23 @@ SRC="$PREFIX/src"
 MANIFEST="$PREFIX/share/dotfiles-server/manifest"
 
 DRY_RUN=0
-[[ "${1:-}" == "--dry-run" ]] && DRY_RUN=1
+AUTO_ZSH=0     # --auto-zsh 를 줘야 ~/.bashrc 에 zsh 진입 블록을 넣는다
+
+# 이전에는 `[[ "${1:-}" == "--dry-run" ]]` 로 첫 인자만 봤다. 플래그가 둘이
+# 되면서 순서에 상관없이 받도록 루프로 바꾼다.
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run)  DRY_RUN=1 ;;
+        --auto-zsh) AUTO_ZSH=1 ;;
+        -h|--help)
+            echo "사용법: bash $0 [--dry-run] [--auto-zsh]"
+            echo "  --dry-run    아무것도 바꾸지 않고 할 일만 출력"
+            echo "  --auto-zsh   ~/.bashrc 에 zsh 자동 진입 블록을 추가"
+            exit 0 ;;
+        *) echo "알 수 없는 옵션: $1  (--help 참고)" >&2; exit 1 ;;
+    esac
+    shift
+done
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 info() { echo -e "${BLUE}→${NC} $1"; }
@@ -354,10 +377,17 @@ else
 fi
 
 # ============================================================================
-# 6. 로그인 시 zsh 진입
+# 6. 로그인 시 zsh 진입  —  --auto-zsh 를 줄 때만 (기본 꺼짐)
+#
 #    chsh 는 쓸 수 없다: $HOME/.local/bin/zsh 가 /etc/shells 에 없고,
-#    등록하려면 sudo 가 필요하다. 대신 ~/.bashrc 에서 zsh 로 넘긴다.
-#    마커로 감싸 uninstall.sh 가 정확히 제거할 수 있게 한다.
+#    등록하려면 sudo 가 필요하다. 그래서 ~/.bashrc 에서 zsh 로 넘기는
+#    우회로를 쓴다. 마커로 감싸 uninstall.sh 가 정확히 제거할 수 있게 한다.
+#
+#    [기본을 끔으로 바꾼 이유 — 2026-08-31]
+#    공용 서버에서 "bash 로 로그인하고 필요할 때만 zsh" 를 쓰려는데 접속하자마자
+#    zsh 로 넘어가 버렸다. exec 로 셸을 갈아치우는 동작이라 되돌릴 수도 없다.
+#    자동 진입은 편의일 뿐이고, 없어도 `exec ~/.local/bin/zsh -l` 한 줄이면
+#    똑같이 쓴다. 편의 때문에 로그인 흐름을 바꾸는 건 기본값으로 과하다.
 # ============================================================================
 echo ""
 info "로그인 셸 연결..."
@@ -365,7 +395,14 @@ info "로그인 셸 연결..."
 MARK_BEGIN="# >>> dotfiles server (zsh) >>>"
 MARK_END="# <<< dotfiles server (zsh) <<<"
 
-if grep -qF "$MARK_BEGIN" "$HOME/.bashrc" 2>/dev/null; then
+if [[ $AUTO_ZSH -eq 0 ]]; then
+    if grep -qF "$MARK_BEGIN" "$HOME/.bashrc" 2>/dev/null; then
+        warn "~/.bashrc 에 예전 zsh 진입 블록이 남아 있습니다."
+        echo "      지우려면: bash $DOTFILES/server/uninstall.sh --bashrc-only"
+    else
+        skip "zsh 자동 진입 (--auto-zsh 로 켤 수 있음)"
+    fi
+elif grep -qF "$MARK_BEGIN" "$HOME/.bashrc" 2>/dev/null; then
     skip "~/.bashrc zsh 진입 블록"
 else
     if [[ $DRY_RUN -eq 1 ]]; then
@@ -402,7 +439,12 @@ echo -e "${GREEN}  설치 완료${NC}"
 echo -e "${GREEN}══════════════════════════════════════${NC}"
 echo ""
 echo "다음 단계:"
-echo "  1. 새로 로그인하거나  exec \"$BIN/zsh\" -l"
+if [[ $AUTO_ZSH -eq 1 ]]; then
+    echo "  1. 새로 로그인하거나  exec \"$BIN/zsh\" -l"
+else
+    echo "  1. zsh 로 들어가려면:  exec \"$BIN/zsh\" -l"
+    echo "     (로그인 시 자동 진입을 원하면 --auto-zsh 로 다시 실행)"
+fi
 echo "     → 첫 zsh 실행 때 zinit 이 자동으로 플러그인을 받습니다"
 echo "        (zsh-completions · fzf-tab · autosuggestions · syntax-highlighting)"
 echo "        수십 초 걸리고, 그동안 프롬프트가 잠깐 멈춘 것처럼 보입니다."

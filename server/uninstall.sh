@@ -5,8 +5,9 @@ set -euo pipefail
 # server/install.sh 되돌리기 — Ubuntu / sudo 없음
 #
 #   사용법:  bash ~/dotfiles/server/uninstall.sh
-#            bash ~/dotfiles/server/uninstall.sh --dry-run   미리보기
-#            bash ~/dotfiles/server/uninstall.sh --all       plugin 캐시까지 제거
+#            bash ~/dotfiles/server/uninstall.sh --dry-run       미리보기
+#            bash ~/dotfiles/server/uninstall.sh --all           plugin 캐시까지 제거
+#            bash ~/dotfiles/server/uninstall.sh --bashrc-only   zsh 진입 블록만 제거
 #
 #   안전장치: install.sh 가 남긴 manifest 에 적힌 경로만 지운다.
 #             manifest 에 없는 것(원래 시스템에 있던 도구, 직접 만든 파일)은
@@ -27,13 +28,27 @@ MANIFEST="$PREFIX/share/dotfiles-server/manifest"
 
 DRY_RUN=0
 REMOVE_ALL=0
+# --bashrc-only: install.sh --auto-zsh 가 넣은 ~/.bashrc 블록만 되돌린다.
+# 설치는 그대로 두고 "로그인 시 자동 진입"만 끄고 싶을 때 쓴다.
+BASHRC_ONLY=0
 for a in "$@"; do
     case "$a" in
-        --dry-run) DRY_RUN=1 ;;
-        --all)     REMOVE_ALL=1 ;;
-        *) echo "알 수 없는 옵션: $a" >&2; exit 2 ;;
+        --dry-run)     DRY_RUN=1 ;;
+        --all)         REMOVE_ALL=1 ;;
+        --bashrc-only) BASHRC_ONLY=1 ;;
+        -h|--help)
+            echo "사용법: bash $0 [--dry-run] [--all] [--bashrc-only]"
+            echo "  --dry-run       아무것도 지우지 않고 할 일만 출력"
+            echo "  --all           zinit 캐시·~/.zshrc.local 까지 제거"
+            echo "  --bashrc-only   ~/.bashrc 의 zsh 진입 블록만 제거"
+            exit 0 ;;
+        *) echo "알 수 없는 옵션: $a  (--help 참고)" >&2; exit 2 ;;
     esac
 done
+
+if [[ $REMOVE_ALL -eq 1 && $BASHRC_ONLY -eq 1 ]]; then
+    echo "--all 과 --bashrc-only 는 같이 쓸 수 없습니다." >&2; exit 2
+fi
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
 info() { echo -e "${BLUE}→${NC} $1"; }
@@ -85,6 +100,14 @@ if [[ -f "$HOME/.bashrc" ]] && grep -qF "$MARK_BEGIN" "$HOME/.bashrc"; then
     fi
 else
     skip "~/.bashrc 에 블록 없음"
+fi
+
+if [[ $BASHRC_ONLY -eq 1 ]]; then
+    echo ""
+    ok "--bashrc-only — 설치된 파일은 그대로 둡니다"
+    echo "   새로 로그인하면 bash 로 들어옵니다. zsh 는 exec \"$BIN/zsh\" -l"
+    echo ""
+    exit 0
 fi
 
 # ============================================================================
