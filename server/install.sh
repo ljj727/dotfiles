@@ -400,7 +400,9 @@ if [[ $AUTO_ZSH -eq 0 ]]; then
         warn "~/.bashrc 에 예전 zsh 진입 블록이 남아 있습니다."
         echo "      지우려면: bash $DOTFILES/server/uninstall.sh --bashrc-only"
     else
-        skip "zsh 자동 진입 (--auto-zsh 로 켤 수 있음)"
+        # skip() 은 "(이미 설치됨)" 을 붙이므로 여기선 안 쓴다 — 설치를 건너뛴
+        # 게 아니라 애초에 기본값이 꺼짐이다.
+        echo -e "${YELLOW}⊘${NC} zsh 자동 진입 안 함 (원하면 --auto-zsh)"
     fi
 elif grep -qF "$MARK_BEGIN" "$HOME/.bashrc" 2>/dev/null; then
     skip "~/.bashrc zsh 진입 블록"
