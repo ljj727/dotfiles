@@ -425,6 +425,28 @@ EOF
     ok "~/.bashrc 에 zsh 진입 블록 추가"
 fi
 
+# ── terminfo 확인 ────────────────────────────────────────────────────────────
+# TERM 에 해당하는 terminfo 가 원격에 없으면 tput 이 줄줄이 실패한다.
+# Ghostty(xterm-ghostty)로 붙을 때 자주 걸린다 — 원격 ncurses 가 그 항목을
+# 모른다. 증상: `tput: unknown terminal`, zinit 색 코드({m}{rst})가 날것으로
+# 출력, zsh 라인편집(zle)이 깨져 입력한 글자가 두 번 보임.
+#
+# 여기서 고칠 수는 없다. terminfo 원본은 로컬 터미널에만 있어서 로컬에서
+# 밀어넣어야 한다. tic -o ~/.terminfo 면 sudo 없이 개인 계정에만 설치된다.
+echo ""
+info "terminfo 확인..."
+if infocmp "${TERM:-dumb}" >/dev/null 2>&1; then
+    ok "terminfo: ${TERM:-(미설정)}"
+else
+    warn "이 서버에 '${TERM:-(미설정)}' terminfo 가 없습니다."
+    echo "      tput 오류가 나고 zsh 라인편집이 깨질 수 있습니다."
+    echo "      로컬(접속하는 쪽) 터미널에서 한 번 실행하세요:"
+    echo ""
+    echo "        infocmp -x ${TERM:-\$TERM} | ssh <이 서버> 'mkdir -p ~/.terminfo && tic -x -o ~/.terminfo -'"
+    echo ""
+    echo "      급하면 이 서버에서:  export TERM=xterm-256color"
+fi
+
 # PATH 안내 — .zshrc:4 가 이미 ~/.local/bin 을 넣지만, bash 로 들어올 때 필요
 case ":${PATH}:" in
     *":$BIN:"*) ok "PATH 에 $BIN 포함됨" ;;
