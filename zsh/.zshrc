@@ -54,8 +54,9 @@ zinit light zsh-users/zsh-autosuggestions
 # [주의] 반드시 autosuggestions 뒤에 로드해야 충돌 없음
 zinit light zdharma-continuum/fast-syntax-highlighting
 
-# history-search-multi-word: Ctrl+R 히스토리 검색을 다중 키워드로 강화
-zinit load zdharma-continuum/history-search-multi-word
+# history-search-multi-word 는 제거했다 (2026-09-01) — ^R 을 fzf 에 넘겼다.
+# 되살리려면 이 줄과 아래 FZF 섹션의 bindkey 를 같이 되돌려야 한다:
+#   zinit load zdharma-continuum/history-search-multi-word
 
 # you-should-use: alias가 있는 명령을 풀로 치면 "alias 쓰라"고 알려줌
 zinit light MichaelAquilina/zsh-you-should-use
@@ -140,11 +141,77 @@ bindkey '^[OB' history-search-forward
 # ============================================================================
 # FZF
 # ============================================================================
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-bindkey -r -M emacs '^R'
-bindkey -r -M vicmd '^R'
-bindkey -r -M viins '^R'
-bindkey '^R' history-search-multi-word
+# 셸 통합 — ^R 히스토리, ^T 파일 경로 삽입, ⌥C 디렉토리 이동.
+#
+# 예전에는 `[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh` 만 있었는데, 그 파일은
+# fzf 설치 방식에 따라 안 생긴다 (맥 brew 는 안 만든다). 그래서 맥에서는
+# fzf 통합이 통째로 빠져 있었다 — ^T 가 self-insert 였다 (2026-09-01 확인).
+# fzf 0.48+ 는 `fzf --zsh` 로 스크립트를 직접 뱉으므로 그쪽을 먼저 쓴다.
+#
+# fzf 가 없으면 조용히 건너뛴다 (서버에 없을 수 있다).
+if (( $+commands[fzf] )); then
+  if fzf --zsh >/dev/null 2>&1; then
+    source <(fzf --zsh)
+  elif [[ -f ~/.fzf.zsh ]]; then
+    source ~/.fzf.zsh
+  fi
+fi
+
+# ^R 은 fzf 로 간다 (2026-09-01).
+# 예전에는 여기서 ^R 을 뺏어 history-search-multi-word 에 줬다. 그쪽은 자체
+# hsmw keymap 을 ^R 누를 때마다 emacs 에서 새로 만들기 때문에(플러그인 281행)
+# ^J/^K 같은 키를 추가할 방법이 없었다. fzf 는 FZF_DEFAULT_OPTS 의
+# ctrl-j/ctrl-k 가 그대로 먹는다.
+#
+# main keymap 이 viins 다 — EDITOR 가 nvim 이라 zsh 가 vi 모드를 고른다.
+# fzf 가 emacs/vicmd/viins 에 다 걸지만, main 에도 명시해 확실히 한다.
+if (( $+widgets[fzf-history-widget] )); then
+  bindkey '^R' fzf-history-widget
+fi
+
+# ^G — 파일을 골라 에디터로 연다 (2026-09-01).
+#
+# ^T 와 역할이 다르다: ^T 는 경로를 커서 위치에 "삽입"만 하고(`nvim ` 뒤에
+# 붙여 쓰는 용도), ^G 는 고른 파일을 바로 "연다".
+#
+# 어디서 실행 중이냐에 따라 에디터가 갈린다:
+#   VSCode 통합 터미널  → code -r -g   (-r = 현재 창 재사용)
+#   그 외(ghostty/tmux) → $EDITOR (없으면 nvim)
+# VSCode 안에서 nvim 을 터미널에 띄우면 에디터와 이중으로 겹쳐서 불편하다.
+#
+# ^G 를 고른 이유: zsh 기본은 list-expand 로 거의 안 쓰고, VSCode 쪽
+# keybindings.json 에도 없다. VSCode 기본 ctrl+g(Go to Line)는 터미널
+# 포커스일 때만 해제해 뒀다 (keybindings.json).
+_dotfiles_edit_cmd() {
+  if [[ -n "${VSCODE_INJECTION:-}" || "${TERM_PROGRAM:-}" == "vscode" ]] \
+     && (( $+commands[code] )); then
+    print -r -- "code -r -g"
+  else
+    print -r -- "${EDITOR:-nvim}"
+  fi
+}
+
+fzf-edit-widget() {
+  local sel
+  if (( $+commands[fd] )); then
+    sel="$(fd --type f --hidden --exclude .git 2>/dev/null | fzf --multi --prompt='edit ❯ ')"
+  else
+    sel="$(find . -type f -not -path '*/.*' 2>/dev/null | fzf --multi --prompt='edit ❯ ')"
+  fi
+  if [[ -n "$sel" ]]; then
+    # 여러 줄 선택을 각각 따옴표 처리해 이어 붙인다 (공백 있는 경로 대비).
+    # (@q) 여야 한다 — (q) 만 쓰면 배열을 문자열로 먼저 합친 뒤 따옴표를
+    # 붙여서 구분자 공백까지 이스케이프된다 (`a\ b.txt\ c.txt`).
+    local -a files
+    files=("${(f)sel}")
+    BUFFER="$(_dotfiles_edit_cmd) ${(j: :)${(@q)files}}"
+    zle accept-line
+  else
+    zle reset-prompt
+  fi
+}
+zle -N fzf-edit-widget
+bindkey '^G' fzf-edit-widget
 
 # ============================================================================
 # Zoxide
