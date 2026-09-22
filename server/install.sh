@@ -206,6 +206,28 @@ else
     ok "batcat → bat 심링크"
 fi
 
+# --- ripgrep — install_sharkdp 를 재사용할 수 없다 ---
+# 그 함수는 타르볼 디렉토리 이름과 바이너리 이름이 같다고 가정한다
+# (dir="${bin}-${tag}-${ARCH_GNU}-..."). ripgrep 은 디렉토리가
+# ripgrep-<tag>-<arch> 인데 바이너리는 rg 라서 어긋난다. fd·bat 이 그 함수를
+# 쓰고 있으므로 함수를 고치는 대신 여기서 따로 받는다.
+if command -v rg &>/dev/null; then
+    skip "rg"
+else
+    RG_TAG="$(gh_latest_tag BurntSushi/ripgrep)"
+    [[ -n "$RG_TAG" ]] || die "ripgrep 최신 태그 조회 실패"
+    RG_DIR="ripgrep-${RG_TAG}-${ARCH_GNU}-unknown-linux-gnu"
+    run curl -fsSL --retry 3 --connect-timeout 10 --max-time 180 \
+        -o "$SRC/rg.tar.gz" \
+        "https://github.com/BurntSushi/ripgrep/releases/download/$RG_TAG/${RG_DIR}.tar.gz"
+    run tar -xzf "$SRC/rg.tar.gz" -C "$SRC"
+    run mv -f "$SRC/$RG_DIR/rg" "$BIN/rg"
+    run chmod 755 "$BIN/rg"
+    run rm -rf "$SRC/$RG_DIR" "$SRC/rg.tar.gz"
+    record "$BIN/rg"
+    ok "rg ($RG_TAG)"
+fi
+
 # ============================================================================
 # 2. .zshrc 가 요구하는 도구 (없으면 셸 시작 시 에러)
 # ============================================================================
