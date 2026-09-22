@@ -1,320 +1,85 @@
-# version: 1.0.0
+# Starship 프롬프트 설정 — 컴팩트 2줄 구성 (2026-09-22 전면 재작성)
+#
+# 설계 원칙
+#   1. 2줄. 1줄에 맥락(경로·git), 2줄에 입력만. 경로가 길어도 명령이 안 밀린다.
+#   2. 쓰는 모듈만 format 에 적는다. 안 적은 모듈은 렌더링되지 않으므로
+#      모듈별 disabled = true 를 늘어놓을 필요가 없다.
+#   3. right_format 을 쓰지 않는다. 오른쪽 프롬프트는 zsh 가 계산한 폭과
+#      터미널이 그린 폭이 어긋나면 줄바꿈이 깨진다. 실제로 그 버그를 겪었다
+#      (gcloud 의 구름 기호 U+2601 + U+FE0F 를 zsh 는 1칸, Ghostty 는 2칸으로 셈).
+#   4. 폭이 1칸으로 확정된 문자만 쓴다. 이모지와 variation selector 금지.
 
-add_newline = true
-continuation_prompt = "[▸▹ ](dimmed white)"
+add_newline = false
+continuation_prompt = "[❯❯](dimmed white) "
 
-format = """($nix_shell$container$fill$git_metrics\n)$cmd_duration\
+format = """
 $hostname\
-$localip\
-$shlvl\
-$shell\
-$env_var\
-$jobs\
-$sudo\
-$username\
-$character"""
-
-right_format = """
-$singularity\
-$kubernetes\
 $directory\
-$vcsh\
-$fossil_branch\
 $git_branch\
-$git_commit\
 $git_state\
 $git_status\
-$hg_branch\
-$pijul_channel\
-$package\
-$c\
-$cpp\
-$cmake\
-$cobol\
-$daml\
-$dart\
-$deno\
-$dotnet\
-$elixir\
-$elm\
-$erlang\
-$fennel\
-$golang\
-$guix_shell\
-$haskell\
-$haxe\
-$helm\
-$java\
-$julia\
-$kotlin\
-$gradle\
-$lua\
-$nim\
-$nodejs\
-$ocaml\
-$opa\
-$perl\
-$php\
-$pulumi\
-$purescript\
-$python\
-$raku\
-$rlang\
-$red\
-$ruby\
-$rust\
-$scala\
-$solidity\
-$swift\
-$terraform\
-$vlang\
-$vagrant\
-$zig\
-$buf\
-$conda\
-$pixi\
-$meson\
-$spack\
-$memory_usage\
-$aws\
-$gcloud\
-$openstack\
-$azure\
-$crystal\
-$custom\
-$status\
-$os\
-$battery\
-$time"""
+$cmd_duration\
+$line_break\
+$character"""
 
-[fill]
-symbol = ' '
+# ── 1줄: 맥락 ──────────────────────────────────────────────────────────
 
-[character]
-format = "$symbol "
-success_symbol = "[◎](bold italic bright-yellow)"
-error_symbol = "[○](italic purple)"
-vimcmd_symbol = "[■](italic dimmed green)"
-# not supported in zsh
-vimcmd_replace_one_symbol = "◌"
-vimcmd_replace_symbol = "□"
-vimcmd_visual_symbol = "▼"
-
-[env_var.VIMSHELL]
-format = "[$env_value]($style)"
-style = 'green italic'
-
-[sudo]
-format = "[$symbol]($style)"
-style = "bold italic bright-purple"
-symbol = "⋈┈"
-disabled = false
-
-[username]
-style_user = "bright-yellow bold italic"
-style_root = "purple bold italic"
-format = "[⭘ $user]($style) "
-disabled = false
-show_always = false
-
-[directory]
-home_symbol = "⌂"
-truncation_length = 2
-truncation_symbol = "□ "
-read_only = " ◈"
-use_os_path_sep = true
-style = "italic blue"
-format = '[$path]($style)[$read_only]($read_only_style)'
-repo_root_style = 'bold blue'
-repo_root_format = '[$before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) [△](bold bright-blue)'
-
-[cmd_duration]
-format = "[◄ $duration ](italic white)"
-
-[jobs]
-format = "[$symbol$number]($style) "
-style = "white"
-symbol = "[▶](blue italic)"
-
-[localip]
+# SSH 로 들어왔을 때만 서버 이름. IP 와 사용자명은 뺐다 — 서버 구분에는
+# 호스트명 하나면 충분하다.
+[hostname]
 ssh_only = true
-format = " ◯[$localipv4](bold magenta)"
-disabled = false
+trim_at = "."
+format = "[$hostname]($style) "
+style = "bold green"
 
-[time]
-disabled = false
-format = "[ $time]($style)"
-time_format = "%R"
-utc_time_offset = "local"
-style = "italic dimmed white"
-
-[battery]
-format = "[ $percentage $symbol]($style)"
-full_symbol = "█"
-charging_symbol = "[↑](italic bold green)"
-discharging_symbol = "↓"
-unknown_symbol = "░"
-empty_symbol = "▃"
-
-[[battery.display]]
-threshold = 20
-style = "italic bold red"
-
-[[battery.display]]
-threshold = 60
-style = "italic dimmed bright-purple"
-
-[[battery.display]]
-threshold = 70
-style = "italic dimmed yellow"
-
-[git_branch]
-format = " [$branch(:$remote_branch)]($style)"
-symbol = "[△](bold italic bright-blue)"
-style = "italic bright-blue"
-truncation_symbol = "⋯"
-truncation_length = 11
-ignore_branches = ["main", "master"]
-only_attached = true
-
-[git_metrics]
-format = '([▴$added]($added_style))([▿$deleted]($deleted_style))'
-added_style = 'italic dimmed green'
-deleted_style = 'italic dimmed red'
-ignore_submodules = true
-disabled = false
-
-[git_status]
-style = "bold italic bright-blue"
-format = "([⎪$ahead_behind$staged$modified$untracked$renamed$deleted$conflicted$stashed⎥]($style))"
-conflicted = "[◪◦](italic bright-magenta)"
-ahead = "[▴│[${count}](bold white)│](italic green)"
-behind = "[▿│[${count}](bold white)│](italic red)"
-diverged = "[◇ ▴┤[${ahead_count}](regular white)│▿┤[${behind_count}](regular white)│](italic bright-magenta)"
-untracked = "[◌◦](italic bright-yellow)"
-stashed = "[◃◈](italic white)"
-modified = "[●◦](italic yellow)"
-staged = "[▪┤[$count](bold white)│](italic bright-cyan)"
-renamed = "[◎◦](italic bright-blue)"
-deleted = "[✕](italic red)"
-
-[deno]
-format = " [deno](italic) [∫ $version](green bold)"
-version_format = "${raw}"
-
-[lua]
-format = " [lua](italic) [${symbol}${version}]($style)"
-version_format = "${raw}"
-symbol = "⨀ "
-style = "bold bright-yellow"
-
-[nodejs]
-format = " [node](italic) [◫ ($version)](bold bright-green)"
-version_format = "${raw}"
-detect_files = ["package-lock.json", "yarn.lock"]
-detect_folders = ["node_modules"]
-detect_extensions = []
-
-[python]
-format = " [py](italic) [${symbol}${version}]($style)"
-symbol = "[⌉](bold bright-blue)⌊ "
-version_format = "${raw}"
-style = "bold bright-yellow"
-
-[ruby]
-format = " [rb](italic) [${symbol}${version}]($style)"
-symbol = "◆ "
-version_format = "${raw}"
-style = "bold red"
-
-[rust]
-format = " [rs](italic) [$symbol$version]($style)"
-symbol = "⊃ "
-version_format = "${raw}"
-style = "bold red"
-
-[package]
-format = " [pkg](italic dimmed) [$symbol$version]($style)"
-version_format = "${raw}"
-symbol = "◨ "
-style = "dimmed yellow italic bold"
-
-[swift]
-format = " [sw](italic) [${symbol}${version}]($style)"
-symbol = "◁ "
-style = "bold bright-red"
-version_format = "${raw}"
-
-[aws]
-disabled = true
-format = " [aws](italic) [$symbol $profile $region]($style)"
+# truncate_to_repo: 저장소 안에서는 저장소 루트 기준으로 보여준다.
+# ~/projects/cosmos/src/api 대신 cosmos/src/api.
+#
+# truncation_length = 0 은 "자르지 않는다"는 뜻이다. 3 으로 두면 뒤에서 세 칸만
+# 남겨서 정작 중요한 저장소 이름이 날아간다 (…/nvim/lua/plugins). 2줄 구성이라
+# 1줄이 길어져도 입력 공간을 안 먹으므로 자를 이유가 없다.
+#
+# truncation_symbol 도 비웠다. 안 자르는데 "…/" 만 붙어서 저장소 루트가
+# "…/dotfiles" 로 보였다.
+[directory]
+truncate_to_repo = true
+truncation_length = 0
+truncation_symbol = ""
+home_symbol = "~"
+read_only = " ro"
+read_only_style = "red"
+format = "[$path]($style)[$read_only]($read_only_style) "
 style = "bold blue"
-symbol = "▲ "
 
-[buf]
-symbol = "■ "
-format = " [buf](italic) [$symbol $version $buf_version]($style)"
+# symbol 을 비웠다 — 기본값은 nerd font 글리프라 폰트 없는 환경에서 깨진다.
+# 경로(파랑)와는 색으로 구분된다.
+[git_branch]
+symbol = ""
+format = "[$branch]($style) "
+style = "purple"
 
-[c]
-symbol = "ℂ "
-format = " [$symbol($version(-$name))]($style)"
+# rebase/merge/cherry-pick 진행 중에만 뜬다. 평소에는 폭 0.
+[git_state]
+format = "[$state($progress_current/$progress_total)]($style) "
+style = "bold red"
 
-[cpp]
-symbol = "ℂ "
-format = " [$symbol($version(-$name))]($style)"
+# 기호는 starship 기본값을 쓴다: +staged !modified ?untracked ✘deleted
+# »renamed $stashed =conflicted ⇡ahead ⇣behind. 전부 폭 1칸으로 확인했다.
+[git_status]
+format = "([$all_status$ahead_behind]($style) )"
+style = "yellow"
 
-[conda]
-symbol = "◯ "
-format = " conda [$symbol$environment]($style)"
+# 5초 넘게 걸린 명령에만 소요 시간을 붙인다.
+[cmd_duration]
+min_time = 5000
+format = "[$duration]($style) "
+style = "dimmed yellow"
 
-[pixi]
-symbol = "■ "
-format = " pixi [$symbol$version ($environment )]($style)"
+# ── 2줄: 입력 ──────────────────────────────────────────────────────────
 
-[dart]
-symbol = "◁◅ "
-format = " dart [$symbol($version )]($style)"
-
-[elixir]
-symbol = "△ "
-format = " exs [$symbol $version OTP $otp_version ]($style)"
-
-[elm]
-symbol = "◩ "
-format = " elm [$symbol($version )]($style)"
-
-[golang]
-symbol = "∩ "
-format = " go [$symbol($version )]($style)"
-
-[haskell]
-symbol = "❯λ "
-format = " hs [$symbol($version )]($style)"
-
-[java]
-symbol = "∪ "
-format = " java [${symbol}(${version} )]($style)"
-
-[julia]
-symbol = "◎ "
-format = " jl [$symbol($version )]($style)"
-
-[memory_usage]
-symbol = "▪▫▪ "
-format = " mem [${ram}( ${swap})]($style)"
-
-[nim]
-symbol = "▴▲▴ "
-format = " nim [$symbol($version )]($style)"
-
-[nix_shell]
-style = 'bold italic dimmed blue'
-symbol = '✶'
-format = '[$symbol nix⎪$state⎪]($style) [$name](italic dimmed white)'
-impure_msg = '[⌽](bold dimmed red)'
-pure_msg = '[⌾](bold dimmed green)'
-unknown_msg = '[◌](bold dimmed ellow)'
-
-[spack]
-symbol = "◇ "
-format = " spack [$symbol$environment]($style)"
+# EDITOR 가 nvim 이라 zsh 가 vi 키바인딩을 쓴다 → 노멀 모드에서 ❮ 로 바뀐다.
+# 직전 명령이 실패하면 ❯ 가 빨강.
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold cyan)"
