@@ -275,6 +275,18 @@ alias lt="eza --tree --level=2 --long --icons --git"
 alias ltree="eza --tree --level=2 --icons --git"
 
 # ============================================================================
+# Aliases: Ripgrep (grep -r 대체)
+# ============================================================================
+# rg 는 숨김파일을 기본으로 건너뛴다. dotfiles 를 다루면 검색 대상이 죄다 점으로
+# 시작해서 "왜 안 찾지" 가 된다 — .zshrc 안의 bindkey 12줄을 0건으로 보고했다
+# (2026-09-22 확인). 그래서 --hidden 을 기본으로 켜고, 아무도 원하지 않는
+# .git 내부만 뺀다 (~/dotfiles 기준 201개 중 132개가 .git 내부였다).
+#
+#   gitignore 까지 무시하려면  rg --no-ignore 패턴
+#   업스트림 기본 동작이 필요하면  command rg 패턴
+alias rg="rg --hidden --glob '!.git'"
+
+# ============================================================================
 # Aliases: FZF helpers
 # ============================================================================
 alias vf='fd --type f --hidden --exclude .git | fzf-tmux -p --reverse | xargs nvim'
@@ -314,6 +326,42 @@ cx() { cd "$@" && l; }
 fcd() { cd "$(find . -type d -not -path '*/.*' | fzf)" && l; }
 f() { echo "$(find . -type f -not -path '*/.*' | fzf)" | pbcopy }
 fv() { nvim "$(find . -type f -not -path '*/.*' | fzf)" }
+
+# rgf — 저장소 전체를 검색해 그 줄에서 편집기를 연다 (2026-09-22 추가)
+#
+# 한 글자 칠 때마다 rg 를 다시 돌린다. 핵심은 --disabled 다: fzf 자신의 퍼지
+# 필터를 끈다는 뜻이다. 끄지 않으면 타이핑이 fzf 로 가고 rg 는 처음 한 번만
+# 돌아서, 저장소 전체가 아니라 "첫 결과 안에서만" 좁혀진다. 끄면 타이핑이
+# {q} 로 흘러 rg 의 검색어가 된다 — 퍼지 매칭을 잃고 rg 정규식을 얻는다.
+#
+#   sleep 0.1   연타할 때 rg 프로세스가 쌓이지 않게 흘려보낸다
+#   || true     아직 0건인 중간 상태에서 fzf 가 에러를 띄우지 않게 한다
+#   {1} {2}     rg 출력 "파일:줄:칼럼:내용" 을 : 로 쪼갠 1·2번째 조각
+#   +{2}+3/3    미리보기를 그 줄이 중앙에 오도록 스크롤
+#   become      fzf 를 편집기로 갈아치운다 (셸로 안 돌아와 화면이 깔끔)
+#
+# 인자를 주면 그 검색어로 시작한다:  rgf bindkey
+#
+# [_dotfiles_edit_cmd 를 재사용하지 않는 이유]
+# 그쪽은 "명령 이름"만 돌려준다. 여기는 줄번호까지 넘겨야 하는데 문법이
+# 편집기마다 다르다 — nvim 은 `+123 file`, code 는 `-g file:123`.
+rgf() {
+  local rg_cmd open_cmd
+  rg_cmd="rg --column --line-number --no-heading --color=always --smart-case --hidden --glob '!.git'"
+  if [[ -n "${VSCODE_INJECTION:-}" || "${TERM_PROGRAM:-}" == "vscode" ]] \
+     && (( $+commands[code] )); then
+    open_cmd='code -r -g {1}:{2}'
+  else
+    open_cmd="${EDITOR:-nvim} +{2} {1}"
+  fi
+  fzf --ansi --disabled --query "${1:-}" \
+      --delimiter : \
+      --bind "start:reload:$rg_cmd {q} || true" \
+      --bind "change:reload:sleep 0.1; $rg_cmd {q} || true" \
+      --preview 'bat --color=always --style=numbers --highlight-line {2} {1}' \
+      --preview-window 'up,60%,border-bottom,+{2}+3/3' \
+      --bind "enter:become($open_cmd)"
+}
 
 extract() {
     if [[ -z "$1" ]]; then
