@@ -19,7 +19,7 @@ set -euo pipefail
 #     - eza / fd / bat / jq          — 사용자가 요청한 도구
 #     - fzf / zoxide / starship      — .zshrc 가 요구하므로 필수 (아래 주석 참고)
 #
-#   설치하지 않는 것: yazi, LSP 서버
+#   설치하지 않는 것: LSP 서버
 #     LSP 서버를 빼는 이유: 대부분 node/go/JDK 런타임을 요구하는데 이 서버엔
 #     없다. nvim/lua/plugins/lsp.lua 가 "있으면 켜고 없으면 조용히 안 켠다"
 #     방식이라 서버가 없어도 nvim 은 정상 동작한다. 그 서버에서 꼭 필요한
@@ -211,12 +211,21 @@ fi
 # (dir="${bin}-${tag}-${ARCH_GNU}-..."). ripgrep 은 디렉토리가
 # ripgrep-<tag>-<arch> 인데 바이너리는 rg 라서 어긋난다. fd·bat 이 그 함수를
 # 쓰고 있으므로 함수를 고치는 대신 여기서 따로 받는다.
+#
+# [gnu 가 아니라 musl 이다 — 2026-10-01 node-07 에서 404 로 죽었다]
+# fd·bat 과 달리 ripgrep 은 x86_64 용 gnu 빌드를 배포하지 않는다.
+# 실제 자산(15.2.0 기준):
+#   ripgrep-<tag>-x86_64-unknown-linux-musl.tar.gz    ← musl 만 있음
+#   ripgrep-<tag>-aarch64-unknown-linux-gnu.tar.gz
+#   ripgrep-<tag>-aarch64-unknown-linux-musl.tar.gz
+# aarch64 는 둘 다 있으므로 양쪽 모두 musl 로 통일한다. 정적 링크라
+# 원격 서버의 glibc 버전을 신경 쓸 필요도 없어진다.
 if command -v rg &>/dev/null; then
     skip "rg"
 else
     RG_TAG="$(gh_latest_tag BurntSushi/ripgrep)"
     [[ -n "$RG_TAG" ]] || die "ripgrep 최신 태그 조회 실패"
-    RG_DIR="ripgrep-${RG_TAG}-${ARCH_GNU}-unknown-linux-gnu"
+    RG_DIR="ripgrep-${RG_TAG}-${ARCH_GNU}-unknown-linux-musl"
     run curl -fsSL --retry 3 --connect-timeout 10 --max-time 180 \
         -o "$SRC/rg.tar.gz" \
         "https://github.com/BurntSushi/ripgrep/releases/download/$RG_TAG/${RG_DIR}.tar.gz"
