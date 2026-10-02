@@ -513,11 +513,28 @@ if [[ -d "$HOME/.terminfo" ]]; then
 fi
 
 # PATH 안내 — .zshrc:4 가 이미 ~/.local/bin 을 넣지만, bash 로 들어올 때 필요
+#
+# [왜 거의 항상 "없음" 으로 뜨는가 — 2026-10-02 node-07]
+# Ubuntu 기본 ~/.profile 은 "로그인할 때" .local/bin 이 존재하면 PATH 에
+# 넣는다. 그런데 그 디렉토리를 방금 이 스크립트가 만들었으므로, 설치를
+# 돌리고 있는 이 셸은 디렉토리가 없던 시점의 PATH 를 그대로 들고 있다.
+# 즉 설치 직후에는 정상적으로 "없음" 이고, 재접속하면 저절로 해결된다.
+# 그래서 ~/.bashrc 수정을 먼저 권하지 않는다 — 중복 등록만 된다.
+PATH_HAS_BIN=0
 case ":${PATH}:" in
-    *":$BIN:"*) ok "PATH 에 $BIN 포함됨" ;;
-    *) warn "PATH 에 $BIN 이 없습니다. 새 로그인 후 반영되거나, 아래를 ~/.bashrc 에 추가하세요:"
-       echo "      export PATH=\"\$HOME/.local/bin:\$PATH\"" ;;
+    *":$BIN:"*) PATH_HAS_BIN=1 ;;
 esac
+
+if [[ $PATH_HAS_BIN -eq 1 ]]; then
+    ok "PATH 에 $BIN 포함됨"
+elif grep -q '\.local/bin' "$HOME/.profile" 2>/dev/null; then
+    warn "PATH 에 $BIN 이 아직 없습니다 (이 셸에만 해당)."
+    echo "      ~/.profile 이 이미 처리하므로 재접속하면 반영됩니다."
+else
+    warn "PATH 에 $BIN 이 없고 ~/.profile 도 처리하지 않습니다."
+    echo "      아래를 ~/.bashrc 에 추가하세요:"
+    echo "      export PATH=\"\$HOME/.local/bin:\$PATH\""
+fi
 
 # ============================================================================
 # 완료
@@ -533,6 +550,10 @@ if [[ $AUTO_ZSH -eq 1 ]]; then
 else
     echo "  1. zsh 로 들어가려면:  exec \"$BIN/zsh\" -l"
     echo "     (로그인 시 자동 진입을 원하면 --auto-zsh 로 다시 실행)"
+fi
+if [[ $PATH_HAS_BIN -eq 0 ]]; then
+    echo "     ※ 지금 이 셸에서는 짧게 'zsh' 만 치면 'command not found' 가 납니다."
+    echo "       위 전체 경로를 쓰거나, 재접속하면 짧은 이름도 됩니다."
 fi
 echo "     → 첫 zsh 실행 때 zinit 이 자동으로 플러그인을 받습니다"
 echo "        (zsh-completions · fzf-tab · autosuggestions · syntax-highlighting)"
