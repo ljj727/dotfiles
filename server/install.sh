@@ -525,15 +525,44 @@ case ":${PATH}:" in
     *":$BIN:"*) PATH_HAS_BIN=1 ;;
 esac
 
+# ~/.bashrc 에도 PATH 를 넣는다.
+#
+# [~/.profile 만으로는 부족하다 — 2026-10-02 node-07]
+# Ubuntu 기본 ~/.profile 이 .local/bin 을 PATH 에 넣지만, 그 파일은
+# "로그인 셸" 만 읽는다. VSCode 원격 터미널·중첩 bash·일부 CI 러너처럼
+# 비로그인 대화형 셸로 들어오면 PATH 에 없어서 zsh 를 못 찾는다.
+# 실측: bash -lc → zsh 찾음 / bash -ic → 못 찾음.
+#
+# case 로 감싸 이미 들어 있으면 아무 일도 하지 않으므로, ~/.profile 과
+# 겹쳐도 중복 등록되지 않는다.
+PATH_MARK_BEGIN="# >>> dotfiles server (PATH) >>>"
+PATH_MARK_END="# <<< dotfiles server (PATH) <<<"
+
+if grep -qF "$PATH_MARK_BEGIN" "$HOME/.bashrc" 2>/dev/null; then
+    skip "~/.bashrc PATH 블록"
+elif [[ $DRY_RUN -eq 1 ]]; then
+    echo "    [dry-run] ~/.bashrc 에 PATH 블록 추가"
+else
+    cat >> "$HOME/.bashrc" <<EOF
+
+$PATH_MARK_BEGIN
+# ~/.profile 은 로그인 셸만 읽는다. 비로그인 대화형 셸(VSCode 원격 터미널 등)
+# 에서도 ~/.local/bin 이 PATH 에 있도록 여기서 한 번 더 넣는다.
+# 이미 있으면 아무 일도 하지 않으므로 중복되지 않는다.
+case ":\$PATH:" in
+    *":\$HOME/.local/bin:"*) ;;
+    *) export PATH="\$HOME/.local/bin:\$PATH" ;;
+esac
+$PATH_MARK_END
+EOF
+    ok "~/.bashrc 에 PATH 블록 추가"
+fi
+
 if [[ $PATH_HAS_BIN -eq 1 ]]; then
     ok "PATH 에 $BIN 포함됨"
-elif grep -q '\.local/bin' "$HOME/.profile" 2>/dev/null; then
-    warn "PATH 에 $BIN 이 아직 없습니다 (이 셸에만 해당)."
-    echo "      ~/.profile 이 이미 처리하므로 재접속하면 반영됩니다."
 else
-    warn "PATH 에 $BIN 이 없고 ~/.profile 도 처리하지 않습니다."
-    echo "      아래를 ~/.bashrc 에 추가하세요:"
-    echo "      export PATH=\"\$HOME/.local/bin:\$PATH\""
+    warn "PATH 에 $BIN 이 아직 없습니다 (이 셸에만 해당)."
+    echo "      새 셸을 열거나 재접속하면 반영됩니다."
 fi
 
 # ============================================================================

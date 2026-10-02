@@ -102,6 +102,26 @@ else
     skip "~/.bashrc 에 블록 없음"
 fi
 
+# ~/.bashrc 의 PATH 블록도 같은 방식으로 제거한다 (install.sh 가 넣는다).
+PATH_MARK_BEGIN="# >>> dotfiles server (PATH) >>>"
+PATH_MARK_END="# <<< dotfiles server (PATH) <<<"
+
+if [[ -f "$HOME/.bashrc" ]] && grep -qF "$PATH_MARK_BEGIN" "$HOME/.bashrc"; then
+    if [[ $DRY_RUN -eq 1 ]]; then
+        echo "    [dry-run] ~/.bashrc 에서 PATH 블록 제거"
+    else
+        awk -v b="$PATH_MARK_BEGIN" -v e="$PATH_MARK_END" '
+            index($0,b) { skipping=1 }
+            !skipping   { print }
+            index($0,e) { skipping=0 }
+        ' "$HOME/.bashrc" > "$HOME/.bashrc.tmp$$"
+        mv "$HOME/.bashrc.tmp$$" "$HOME/.bashrc"
+        ok "~/.bashrc PATH 블록 제거"
+    fi
+else
+    skip "~/.bashrc 에 PATH 블록 없음"
+fi
+
 if [[ $BASHRC_ONLY -eq 1 ]]; then
     echo ""
     ok "--bashrc-only — 설치된 파일은 그대로 둡니다"
